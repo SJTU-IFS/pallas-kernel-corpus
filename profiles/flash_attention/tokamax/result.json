@@ -1,0 +1,102 @@
+{
+  "implementation": "tokamax",
+  "contract": "splash_mha_hsd",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "batch": 1,
+    "heads": 8,
+    "sequence": 1024,
+    "head_dim": 128
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 0.999987781047821,
+    "max_abs_diff": 0.0078125,
+    "mean_abs_diff": 0.0002429479209240526,
+    "status": "PASS"
+  },
+  "logical_flops": 4294967296,
+  "reference_cost_analysis": {
+    "bytes accessedout{}": 49356800.0,
+    "utilization4{}": 1.0,
+    "bytes accessed": 130195520.0,
+    "bytes accessed2{}": 3178496.0,
+    "bytes accessedout{1}": 33554432.0,
+    "bytes accessed0{}": 45088832.0,
+    "flops": 4364156928.0,
+    "bytes accessedout{0}": 32768.0,
+    "utilization2{}": 3.0,
+    "bytes accessed1{}": 39878656.0,
+    "utilization0{}": 10.0,
+    "bytes accessed3{}": 32768.0,
+    "utilization3{}": 1.0,
+    "utilization1{}": 4.0,
+    "bytes accessed4{}": 1048576.0,
+    "optimal_seconds": 7.948444545036182e-05,
+    "transcendentals": 16777216.0
+  },
+  "implementation_cost_analysis": {
+    "transcendentals": 8388608.0,
+    "bytes accessed4{}": 512.0,
+    "utilization8{}": 1.0,
+    "utilization5{}": 1.0,
+    "utilization9{}": 1.0,
+    "optimal_seconds": 5.441328539745882e-06,
+    "bytes accessed1{}": 512.0,
+    "bytes accessed3{}": 512.0,
+    "utilization4{}": 1.0,
+    "bytes accessed0{}": 512.0,
+    "utilization3{}": 1.0,
+    "utilization7{}": 1.0,
+    "bytes accessed9{}": 524288.0,
+    "bytes accessed7{}": 2097152.0,
+    "bytes accessed6{}": 2097152.0,
+    "bytes accessed8{}": 2097152.0,
+    "bytes accessed5{}": 512.0,
+    "utilization0{}": 1.0,
+    "bytes accessed2{}": 512.0,
+    "bytes accessed": 8912896.0,
+    "bytes accessedout{}": 2621440.0,
+    "flops": 4294967296.0,
+    "utilization2{}": 1.0,
+    "utilization1{}": 1.0,
+    "utilization6{}": 1.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 0.17384125,
+    "median_ms": 0.174473672,
+    "mean_ms": 0.17464468595999996,
+    "std_ms": 0.0006558411165476597,
+    "p5_ms": 0.1739865196,
+    "p95_ms": 0.17627016020000003
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 0.2922600251622498,
+    "median_ms": 0.29880000511184335,
+    "mean_ms": 0.2996248030103743,
+    "std_ms": 0.004740752544798232,
+    "p5_ms": 0.29290801321621984,
+    "p95_ms": 0.30844800639897585
+  },
+  "trace_event_names": [
+    "jit__unnamed_function(224595831982390745)"
+  ],
+  "achieved_tflops": 24.616707190068194,
+  "mxu_utilization_pct": 2.6815585174366228,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/flash_attention/tokamax/trace",
+  "trace_chunks": [
+    "profiles/flash_attention/tokamax/trace/chunk_000",
+    "profiles/flash_attention/tokamax/trace/chunk_001",
+    "profiles/flash_attention/tokamax/trace/chunk_002",
+    "profiles/flash_attention/tokamax/trace/chunk_003",
+    "profiles/flash_attention/tokamax/trace/chunk_004"
+  ]
+}

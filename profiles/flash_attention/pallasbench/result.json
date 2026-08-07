@@ -1,0 +1,75 @@
+{
+  "implementation": "pallasbench",
+  "contract": "dense_2d",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "batch": 1,
+    "heads": 8,
+    "sequence": 1024,
+    "head_dim": 128
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 0.999980628490448,
+    "max_abs_diff": 0.0029296875,
+    "mean_abs_diff": 0.0002648739900905639,
+    "status": "PASS"
+  },
+  "logical_flops": 536870912,
+  "reference_cost_analysis": {
+    "bytes accessed": 4726848.0,
+    "optimal_seconds": 2.8857436973339645e-06,
+    "bytes accessed1{}": 524288.0,
+    "utilization0{}": 6.0,
+    "bytes accessed0{}": 2883648.0,
+    "bytes accessedout{}": 3940352.0,
+    "utilization1{}": 2.0,
+    "flops": 272629760.0
+  },
+  "implementation_cost_analysis": {
+    "utilization2{}": 1.0,
+    "utilization1{}": 1.0,
+    "bytes accessed0{}": 262144.0,
+    "bytes accessed1{}": 262144.0,
+    "bytes accessed2{}": 262144.0,
+    "utilization0{}": 1.0,
+    "bytes accessedout{}": 262144.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 0.007658750000000001,
+    "median_ms": 0.007824297000000001,
+    "mean_ms": 0.00783466724,
+    "std_ms": 0.00011779905243007005,
+    "p5_ms": 0.0076654845,
+    "p95_ms": 0.0080174453
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 0.11702999472618103,
+    "median_ms": 0.12177499593235552,
+    "mean_ms": 0.12258999864570796,
+    "std_ms": 0.003802557201738552,
+    "p5_ms": 0.11815852776635438,
+    "p95_ms": 0.12837103568017483
+  },
+  "trace_event_names": [
+    "jit_pallas_flash_attention(3923471880107902348)"
+  ],
+  "achieved_tflops": 68.61586568096789,
+  "mxu_utilization_pct": 7.474495172218723,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/flash_attention/pallasbench/trace",
+  "trace_chunks": [
+    "profiles/flash_attention/pallasbench/trace/chunk_000",
+    "profiles/flash_attention/pallasbench/trace/chunk_001",
+    "profiles/flash_attention/pallasbench/trace/chunk_002",
+    "profiles/flash_attention/pallasbench/trace/chunk_003",
+    "profiles/flash_attention/pallasbench/trace/chunk_004"
+  ]
+}

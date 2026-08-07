@@ -1,0 +1,70 @@
+{
+  "config": "gather-sparsecore",
+  "family": "sparsecore_ragged_gather",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "shape": {
+    "workload": null,
+    "matmul_n": null,
+    "gmm": null,
+    "gather": {
+      "num_rows": 4096,
+      "hidden": 1024,
+      "out_rows": 16384,
+      "dtype": "bfloat16"
+    }
+  },
+  "matmul_dtype": "bfloat16",
+  "gather_dtype": "bfloat16",
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "pallas_launches": 1,
+  "device_timing": {
+    "n": 50,
+    "min_ms": 0.19553375,
+    "median_ms": 0.197056797,
+    "mean_ms": 0.19715740624,
+    "std_ms": 0.000674710268389346,
+    "p5_ms": 0.1959246952,
+    "p95_ms": 0.1982501834
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 0.3204100066795945,
+    "median_ms": 0.3323550336062908,
+    "mean_ms": 0.33205419313162565,
+    "std_ms": 0.007017074061493751,
+    "p5_ms": 0.32333648414351046,
+    "p95_ms": 0.341204390861094
+  },
+  "matmul_flops": 0,
+  "gather_bytes_moved": 67174400,
+  "matmul_tflops": null,
+  "workload_arithmetic_intensity": null,
+  "v6e_ridge_point_flop_per_byte": 559.7560975609756,
+  "sparsecore_overlapped_fraction": 0.0,
+  "trace_overlap_detail": {
+    "tensorcore_busy_us": 0,
+    "tensorcore_ops_counted": 0,
+    "tensorcore_ops_excluded_as_offload_stubs": 4,
+    "workload_sparsecore_busy_us": 0,
+    "workload_sparsecore_op_names": [],
+    "sparsecore_busy_us": 179.92249999999694,
+    "overlap_us": 0,
+    "sparsecore_overlapped_fraction": 0.0,
+    "tensorcore_window": null,
+    "sparsecore_window": [
+      20369.6925,
+      20549.61625
+    ],
+    "sparsecore_op_names": [
+      "sc_ragged_gather.5.cloned.1.call-start",
+      "sc_ragged_gather.5.cloned.1.call-done",
+      "sc_ragged_gather.5.cloned.1.call-start",
+      "sc_ragged_gather.5.cloned.1.call-done"
+    ]
+  },
+  "traces_kept": false
+}

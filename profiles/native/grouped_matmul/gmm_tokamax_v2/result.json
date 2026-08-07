@@ -1,0 +1,153 @@
+{
+  "implementation": "gmm-tokamax-v2",
+  "run_label": "",
+  "family": "grouped_matmul",
+  "contract": "grouped_matmul_2d",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "rows": 32768,
+    "groups": 128,
+    "k": 4096,
+    "n": 1536
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 1.0,
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "status": "PASS",
+    "exact_match_failures": 0,
+    "per_leaf": null,
+    "reference": "grouped_matmul_batched_dense"
+  },
+  "flops": {
+    "logical": {
+      "flops": 412316860416,
+      "achieved_tflops": 303.025565017891,
+      "mxu_utilization_pct": 33.00932080804913
+    }
+  },
+  "primary_flops_convention": "logical",
+  "logical_flops": 412316860416,
+  "flop_accounting_notes": [
+    "sum(group_sizes) == rows, so every row is covered exactly once and the logical FLOP count matches a dense matmul of the same [m,k]@[k,n] shape",
+    "tile padding means the kernels may schedule more than the logical count when group sizes are not multiples of the m-tile"
+  ],
+  "reference_cost_analysis": {
+    "optimal_seconds": 0.0012700700899586082,
+    "bytes accessed0{}": 268435456.0,
+    "flops": 412316860416.0,
+    "bytes accessed1{}": 1610612736.0,
+    "bytes accessedout{}": 201326592.0,
+    "bytes accessed": 2080374784.0,
+    "utilization0{}": 3.0,
+    "utilization1{}": 1.0
+  },
+  "implementation_cost_analysis": {
+    "utilization1{}": 1.0,
+    "bytes accessedout{}": 201326592.0,
+    "optimal_seconds": 0.0012700700899586082,
+    "bytes accessed1{}": 512.0,
+    "bytes accessed": 2080374784.0,
+    "flops": 412316860416.0,
+    "utilization3{}": 1.0,
+    "utilization2{}": 1.0,
+    "bytes accessed0{}": 512.0,
+    "utilization0{}": 1.0,
+    "bytes accessed3{}": 1610612736.0,
+    "bytes accessed2{}": 268435456.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 1.36018375,
+    "median_ms": 1.3606669139999998,
+    "mean_ms": 1.3607680015599999,
+    "std_ms": 0.0003567654138137093,
+    "p5_ms": 1.3602690233,
+    "p95_ms": 1.3614252499000001
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 1.4828399871475995,
+    "median_ms": 1.504324987763539,
+    "mean_ms": 1.8246673827525228,
+    "std_ms": 0.5817415706912495,
+    "p5_ms": 1.486717478837818,
+    "p95_ms": 3.210277561447583
+  },
+  "trace_event_names": [
+    "jit_gmm_v2(4127985716511223855)"
+  ],
+  "native_source_shape": true,
+  "kernel_config": {
+    "balanced_groups": true,
+    "baseline_is_pure_xla": true,
+    "preferred_element_type": "float32",
+    "variant": "megablox v2 (no qwix)"
+  },
+  "bytes": {},
+  "primary_bytes_convention": null,
+  "bytes_moved": null,
+  "achieved_gbytes_per_second": null,
+  "achieved_tflops": 303.025565017891,
+  "mxu_utilization_pct": 33.00932080804913,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/native/grouped_matmul/gmm_tokamax_v2/trace",
+  "trace_chunks": [
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_000",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_001",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_002",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_003",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_004",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_005",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_006",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_007",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_008",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_009",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_010",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_011",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_012",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_013",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_014",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_015",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_016",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_017",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_018",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_019",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_020",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_021",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_022",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_023",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_024",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_025",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_026",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_027",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_028",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_029",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_030",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_031",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_032",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_033",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_034",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_035",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_036",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_037",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_038",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_039",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_040",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_041",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_042",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_043",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_044",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_045",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_046",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_047",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_048",
+    "profiles/native/grouped_matmul/gmm_tokamax_v2/trace/chunk_049"
+  ]
+}

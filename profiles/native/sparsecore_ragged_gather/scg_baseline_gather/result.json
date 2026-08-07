@@ -1,0 +1,153 @@
+{
+  "implementation": "scg-baseline-gather",
+  "run_label": "",
+  "family": "sparsecore_ragged_gather",
+  "contract": "ragged_gather",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "num_rows": 4096,
+    "hidden": 1024,
+    "out_rows": 2048
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 1.0,
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "status": "PASS",
+    "exact_match_failures": 0,
+    "per_leaf": null,
+    "reference": "ragged_gather"
+  },
+  "pallas_launches": 0,
+  "measures_xla_fallback": false,
+  "reference_is_jittable": true,
+  "donated_argnum": null,
+  "flops": {},
+  "primary_flops_convention": null,
+  "logical_flops": null,
+  "flop_accounting_notes": [
+    "SparseCore kernel: runs on the v6e's SparseCores via plsc.VectorSubcoreMesh, not its TensorCore, so MXU utilization is not reported and the metric is achieved bandwidth",
+    "the kernels pad their output to the SparseCore block size and column tile; the profiled function trims to the live region so it is compared against the same thing the reference returns",
+    "the reference is upstream's own no-SparseCore fallback (x[indices]), not a re-derived one"
+  ],
+  "reference_cost_analysis": {
+    "optimal_seconds": 8.707877714186907e-05,
+    "bytes accessed": 142635040.0,
+    "utilization2{}": 2.0,
+    "bytes accessed2{}": 16384.0,
+    "bytes accessed1{}": 40960.0,
+    "bytes accessedout{}": 58732544.0,
+    "bytes accessed0{}": 83894304.0,
+    "flops": 8192.0,
+    "utilization1{}": 5.0,
+    "utilization0{}": 4.0
+  },
+  "implementation_cost_analysis": {
+    "bytes accessedout{}": 58732544.0,
+    "bytes accessed": 142635040.0,
+    "utilization1{}": 5.0,
+    "bytes accessed0{}": 83894304.0,
+    "utilization0{}": 4.0,
+    "bytes accessed1{}": 40960.0,
+    "utilization2{}": 2.0,
+    "optimal_seconds": 8.707877714186907e-05,
+    "bytes accessed2{}": 16384.0,
+    "flops": 8192.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 0.010237577999999999,
+    "median_ms": 0.010270469,
+    "mean_ms": 0.010279164159999998,
+    "std_ms": 4.330295595423475e-05,
+    "p5_ms": 0.01024,
+    "p95_ms": 0.0103916875
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 0.12060999870300293,
+    "median_ms": 0.12543000048026443,
+    "mean_ms": 0.1256203930824995,
+    "std_ms": 0.0029053513719674616,
+    "p5_ms": 0.12212697765789926,
+    "p95_ms": 0.12916248524561524
+  },
+  "trace_event_names": [
+    "jit_ragged_gather(10638074906125499637)"
+  ],
+  "native_source_shape": false,
+  "kernel_config": {
+    "backend": "sparsecore"
+  },
+  "bytes": {
+    "gathered_rows": {
+      "bytes": 16785408,
+      "achieved_gbytes_per_second": 1634.3370492623071
+    }
+  },
+  "primary_bytes_convention": "gathered_rows",
+  "bytes_moved": 16785408,
+  "achieved_gbytes_per_second": 1634.3370492623071,
+  "achieved_tflops": null,
+  "mxu_utilization_pct": null,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace",
+  "trace_chunks": [
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_000",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_001",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_002",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_003",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_004",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_005",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_006",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_007",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_008",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_009",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_010",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_011",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_012",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_013",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_014",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_015",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_016",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_017",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_018",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_019",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_020",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_021",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_022",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_023",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_024",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_025",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_026",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_027",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_028",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_029",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_030",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_031",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_032",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_033",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_034",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_035",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_036",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_037",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_038",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_039",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_040",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_041",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_042",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_043",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_044",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_045",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_046",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_047",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_048",
+    "profiles/native/sparsecore_ragged_gather/scg_baseline_gather/trace/chunk_049"
+  ]
+}

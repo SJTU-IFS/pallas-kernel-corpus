@@ -1,0 +1,80 @@
+{
+  "implementation": "pallasbench",
+  "contract": "dense_2d",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "batch": 1,
+    "heads": 1,
+    "sequence": 512,
+    "head_dim": 64,
+    "value_head_dim": 64
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 0.9999783635139465,
+    "max_abs_diff": 0.00390625,
+    "mean_abs_diff": 0.00034805561881512403,
+    "status": "PASS"
+  },
+  "logical_flops": 67108864,
+  "reference_cost_analysis": {
+    "bytes accessedout{}": 1253376.0,
+    "bytes accessed": 1581120.0,
+    "bytes accessed1{}": 196608.0,
+    "optimal_seconds": 9.652746939536883e-07,
+    "bytes accessed0{}": 917568.0,
+    "utilization1{}": 2.0,
+    "flops": 34603008.0,
+    "utilization0{}": 8.0
+  },
+  "implementation_cost_analysis": {
+    "utilization1{}": 1.0,
+    "bytes accessed1{}": 131072.0,
+    "bytes accessedout{}": 991232.0,
+    "utilization2{}": 1.0,
+    "bytes accessed": 1318976.0,
+    "bytes accessed2{}": 131072.0,
+    "bytes accessed0{}": 589888.0,
+    "optimal_seconds": 8.052356861298904e-07,
+    "utilization0{}": 9.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 0.00421125,
+    "median_ms": 0.004325469,
+    "mean_ms": 0.0043230032,
+    "std_ms": 8.943409695188967e-05,
+    "p5_ms": 0.0042131483,
+    "p95_ms": 0.0044791446
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 0.10745000327005982,
+    "median_ms": 0.11641500168479979,
+    "mean_ms": 0.11788320145569742,
+    "std_ms": 0.007665655961013377,
+    "p5_ms": 0.10781252640299499,
+    "p95_ms": 0.13250251940917224
+  },
+  "trace_event_names": [
+    "jit_pallas_flash_attention(577681612264720273)"
+  ],
+  "native_source_shape": true,
+  "tokamax_blocks": null,
+  "achieved_tflops": 15.514817930726123,
+  "mxu_utilization_pct": 1.6900673127152641,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/native/flash_attention/pallasbench/trace",
+  "trace_chunks": [
+    "profiles/native/flash_attention/pallasbench/trace/chunk_000",
+    "profiles/native/flash_attention/pallasbench/trace/chunk_001",
+    "profiles/native/flash_attention/pallasbench/trace/chunk_002",
+    "profiles/native/flash_attention/pallasbench/trace/chunk_003",
+    "profiles/native/flash_attention/pallasbench/trace/chunk_004"
+  ]
+}

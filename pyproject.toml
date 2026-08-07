@@ -1,0 +1,26 @@
+[project]
+name = "pallas-kernel-corpus"
+version = "0.1.0"
+description = "A provenance-tracked corpus of standalone TPU JAX/Pallas kernels"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "jax[tpu]==0.10.2",
+  "jaxlib==0.10.2",
+  "libtpu==0.0.42.*",
+  "numpy==2.3.5",
+  "scipy==1.18.0",
+  "ml-dtypes==0.5.4",
+  "opt-einsum==3.4.0",
+]
+
+[dependency-groups]
+profile = [
+  "xprof==2.22.2",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

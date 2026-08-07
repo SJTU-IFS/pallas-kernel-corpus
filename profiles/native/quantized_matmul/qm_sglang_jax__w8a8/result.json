@@ -1,0 +1,161 @@
+{
+  "implementation": "qm-sglang-jax",
+  "run_label": "w8a8",
+  "family": "quantized_matmul",
+  "contract": "quantized_matmul_per_channel",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "n_batch": 1024,
+    "n_in": 4096,
+    "n_out": 14336
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 0.9999766945838928,
+    "max_abs_diff": 2.0,
+    "mean_abs_diff": 0.14810679852962494,
+    "status": "PASS",
+    "reference": "quantized_matmul_per_channel_xla"
+  },
+  "flops": {
+    "logical": {
+      "flops": 120259084288,
+      "achieved_tflops": 1276.4398715768164,
+      "mxu_utilization_pct": 139.04573764453338
+    }
+  },
+  "primary_flops_convention": "logical",
+  "logical_flops": 120259084288,
+  "flop_accounting_notes": [
+    "MXU utilization is computed against the 918 TFLOP/s *bf16* peak for corpus consistency; with int8 weights the hardware peak is higher, so this understates true utilization and should not be read as an int8 efficiency figure",
+    "the correctness reference is the XLA dequantize-and-matmul path, not the exact fp32 one, so the reported error includes both kernels' quantization choices rather than only rounding"
+  ],
+  "reference_cost_analysis": {
+    "bytes accessedout{}": 209903616.0,
+    "utilization1{}": 12.0,
+    "utilization0{}": 10.0,
+    "optimal_seconds": 0.000287399860098958,
+    "bytes accessed3{}": 58720256.0,
+    "utilization3{}": 1.0,
+    "bytes accessed2{}": 4200448.0,
+    "bytes accessed0{}": 75614272.0,
+    "utilization2{}": 4.0,
+    "bytes accessed": 348438592.0,
+    "bytes accessedout{0}": 2048.0,
+    "bytes accessedout{1}": 4096.0,
+    "bytes accessed1{}": 33280.0,
+    "flops": 120336695296.0
+  },
+  "implementation_cost_analysis": {
+    "utilization2{}": 1.0,
+    "bytes accessed2{}": 57344.0,
+    "flops": 16776192.0,
+    "utilization3{}": 1.0,
+    "bytes accessed0{}": 16779264.0,
+    "bytes accessed3{}": 4096.0,
+    "bytes accessedout{}": 29366272.0,
+    "utilization1{}": 2.0,
+    "utilization0{}": 4.0,
+    "optimal_seconds": 5.126251380715985e-06,
+    "bytes accessed1{}": 58720768.0,
+    "bytes accessed": 8396800.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 0.0935725,
+    "median_ms": 0.094214453,
+    "mean_ms": 0.09425030464,
+    "std_ms": 0.0002665947145836002,
+    "p5_ms": 0.09382744929999999,
+    "p95_ms": 0.09467071490000001
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 0.192649953532964,
+    "median_ms": 0.20552499336190522,
+    "mean_ms": 0.20513339899480343,
+    "std_ms": 0.004083899342470065,
+    "p5_ms": 0.19993499445263296,
+    "p95_ms": 0.2099259931128472
+  },
+  "trace_event_names": [
+    "jit_quantized_matmul_kernel(9819805208981700991)"
+  ],
+  "native_source_shape": false,
+  "kernel_config": {
+    "quantize_activation": true,
+    "w_q_dtype": "int8",
+    "tuned_value": [
+      1024,
+      1024,
+      4096,
+      1
+    ],
+    "block_selection": "kernel tuned-size table"
+  },
+  "bytes": {},
+  "primary_bytes_convention": null,
+  "bytes_moved": null,
+  "achieved_gbytes_per_second": null,
+  "achieved_tflops": 1276.4398715768164,
+  "mxu_utilization_pct": 139.04573764453338,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace",
+  "trace_chunks": [
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_000",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_001",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_002",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_003",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_004",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_005",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_006",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_007",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_008",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_009",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_010",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_011",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_012",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_013",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_014",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_015",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_016",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_017",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_018",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_019",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_020",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_021",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_022",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_023",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_024",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_025",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_026",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_027",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_028",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_029",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_030",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_031",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_032",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_033",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_034",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_035",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_036",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_037",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_038",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_039",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_040",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_041",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_042",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_043",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_044",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_045",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_046",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_047",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_048",
+    "profiles/native/quantized_matmul/qm_sglang_jax__w8a8/trace/chunk_049"
+  ]
+}

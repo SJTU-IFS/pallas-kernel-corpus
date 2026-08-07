@@ -1,0 +1,81 @@
+{
+  "config": "gmm+gather-sparsecore",
+  "family": "sparsecore_ragged_gather",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "shape": {
+    "workload": "gmm",
+    "matmul_n": null,
+    "gmm": {
+      "rows": 32768,
+      "groups": 8,
+      "k": 4096,
+      "n": 1536
+    },
+    "gather": {
+      "num_rows": 4096,
+      "hidden": 1024,
+      "out_rows": 32768,
+      "dtype": "bfloat16"
+    }
+  },
+  "matmul_dtype": "bfloat16",
+  "gather_dtype": "bfloat16",
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "pallas_launches": 2,
+  "device_timing": {
+    "n": 50,
+    "min_ms": 2.006529922,
+    "median_ms": 2.0110717969999996,
+    "mean_ms": 2.0112845266,
+    "std_ms": 0.00226654839841515,
+    "p5_ms": 2.0081658827999997,
+    "p95_ms": 2.0152139298
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 2.2331600775942206,
+    "median_ms": 2.255644998513162,
+    "mean_ms": 2.2592663788236678,
+    "std_ms": 0.018519320238150047,
+    "p5_ms": 2.234551531728357,
+    "p95_ms": 2.288140484597534
+  },
+  "matmul_flops": 412316860416,
+  "gather_bytes_moved": 134348800,
+  "matmul_tflops": 205.0234412471352,
+  "workload_arithmetic_intensity": 877.7142857142857,
+  "v6e_ridge_point_flop_per_byte": 559.7560975609756,
+  "sparsecore_overlapped_fraction": 0.9987022413049893,
+  "trace_overlap_detail": {
+    "tensorcore_busy_us": 1994.9951560000118,
+    "tensorcore_ops_counted": 96,
+    "tensorcore_ops_excluded_as_offload_stubs": 10,
+    "workload_sparsecore_busy_us": 9.44859400000496,
+    "workload_sparsecore_op_names": [
+      "copy",
+      "scatter_offload_custom_fusion"
+    ],
+    "sparsecore_busy_us": 533.8336720000007,
+    "overlap_us": 532.9748440000039,
+    "sparsecore_overlapped_fraction": 0.9983912067652474,
+    "tensorcore_window": [
+      19117.6475,
+      21113.595078000002
+    ],
+    "sparsecore_window": [
+      19142.185156,
+      19676.02
+    ],
+    "sparsecore_op_names": [
+      "sc_ragged_gather.5.cloned.1.call-start",
+      "sc_ragged_gather.5.cloned.1.call-done",
+      "sc_ragged_gather.5.cloned.1.call-start",
+      "sc_ragged_gather.5.cloned.1.call-done"
+    ]
+  },
+  "traces_kept": false
+}

@@ -1,0 +1,81 @@
+{
+  "implementation": "jaxbench",
+  "contract": "causal_bhsd",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "batch": 1,
+    "heads": 8,
+    "sequence": 1024,
+    "head_dim": 128
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 0.9999772310256958,
+    "max_abs_diff": 0.015625,
+    "mean_abs_diff": 0.00041632933425717056,
+    "status": "PASS"
+  },
+  "logical_flops": 4294967296,
+  "reference_cost_analysis": {
+    "bytes accessed0{}": 26214464.0,
+    "optimal_seconds": 2.4330980522790924e-05,
+    "bytes accessed1{}": 8388608.0,
+    "flops": 2190475264.0,
+    "bytes accessed": 39854144.0,
+    "utilization1{}": 3.0,
+    "bytes accessedout{}": 32514048.0,
+    "utilization0{}": 9.0,
+    "utilization2{}": 1.0,
+    "bytes accessed2{}": 2097152.0
+  },
+  "implementation_cost_analysis": {
+    "flops": 4328521728.0,
+    "bytes accessed0{}": 2097152.0,
+    "bytes accessed1{}": 2097152.0,
+    "utilization0{}": 1.0,
+    "optimal_seconds": 5.121250524098286e-06,
+    "utilization2{}": 1.0,
+    "transcendentals": 8388608.0,
+    "utilization1{}": 1.0,
+    "bytes accessed": 8388608.0,
+    "bytes accessed2{}": 2097152.0,
+    "bytes accessedout{}": 2097152.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 0.207301328,
+    "median_ms": 0.20800625,
+    "mean_ms": 0.20820058436,
+    "std_ms": 0.0006768710292643584,
+    "p5_ms": 0.2073923476,
+    "p95_ms": 0.20961105470000002
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 0.3303500125184655,
+    "median_ms": 0.33510001958347857,
+    "mean_ms": 0.3363086062017828,
+    "std_ms": 0.0039057809558634203,
+    "p5_ms": 0.33221902267541736,
+    "p95_ms": 0.3444820118602365
+  },
+  "trace_event_names": [
+    "jit_kernel(6474626768422669723)"
+  ],
+  "achieved_tflops": 20.648260790240677,
+  "mxu_utilization_pct": 2.2492658812898343,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/flash_attention/jaxbench/trace",
+  "trace_chunks": [
+    "profiles/flash_attention/jaxbench/trace/chunk_000",
+    "profiles/flash_attention/jaxbench/trace/chunk_001",
+    "profiles/flash_attention/jaxbench/trace/chunk_002",
+    "profiles/flash_attention/jaxbench/trace/chunk_003",
+    "profiles/flash_attention/jaxbench/trace/chunk_004"
+  ]
+}

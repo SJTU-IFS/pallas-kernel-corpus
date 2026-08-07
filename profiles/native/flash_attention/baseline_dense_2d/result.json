@@ -1,0 +1,79 @@
+{
+  "implementation": "baseline-dense-2d",
+  "contract": "dense_2d",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "batch": 1,
+    "heads": 1,
+    "sequence": 512,
+    "head_dim": 64,
+    "value_head_dim": 64
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 1.0,
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "status": "PASS"
+  },
+  "logical_flops": 67108864,
+  "reference_cost_analysis": {
+    "flops": 34603008.0,
+    "bytes accessedout{}": 1253376.0,
+    "utilization0{}": 8.0,
+    "bytes accessed1{}": 196608.0,
+    "bytes accessed0{}": 917568.0,
+    "optimal_seconds": 9.652746939536883e-07,
+    "utilization1{}": 2.0,
+    "bytes accessed": 1581120.0
+  },
+  "implementation_cost_analysis": {
+    "bytes accessedout{}": 1253376.0,
+    "utilization1{}": 2.0,
+    "bytes accessed0{}": 917568.0,
+    "bytes accessed": 1581120.0,
+    "bytes accessed1{}": 196608.0,
+    "optimal_seconds": 9.652746939536883e-07,
+    "flops": 34603008.0,
+    "utilization0{}": 8.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 0.0025025,
+    "median_ms": 0.002535742,
+    "mean_ms": 0.0025778312400000004,
+    "std_ms": 7.318262403701033e-05,
+    "p5_ms": 0.0025056054000000003,
+    "p95_ms": 0.0027055821000000002
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 0.11205999180674553,
+    "median_ms": 0.11577998520806432,
+    "mean_ms": 0.11742659262381494,
+    "std_ms": 0.004388341358275118,
+    "p5_ms": 0.11253700067754835,
+    "p95_ms": 0.1241200021468103
+  },
+  "trace_event_names": [
+    "jit_dense_2d(5785549020908485699)"
+  ],
+  "native_source_shape": true,
+  "tokamax_blocks": null,
+  "achieved_tflops": 26.465178239742055,
+  "mxu_utilization_pct": 2.8829170195797444,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/native/flash_attention/baseline_dense_2d/trace",
+  "trace_chunks": [
+    "profiles/native/flash_attention/baseline_dense_2d/trace/chunk_000",
+    "profiles/native/flash_attention/baseline_dense_2d/trace/chunk_001",
+    "profiles/native/flash_attention/baseline_dense_2d/trace/chunk_002",
+    "profiles/native/flash_attention/baseline_dense_2d/trace/chunk_003",
+    "profiles/native/flash_attention/baseline_dense_2d/trace/chunk_004"
+  ]
+}

@@ -1,0 +1,1283 @@
+{
+ "add": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_add",
+  "family": "elementwise_binary",
+  "file": "level1/add_op.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ],
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Binary elementwise addition for residual connections",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the two inputs and the output are 64 MiB each, and the compiler reports using 192.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     512,
+     4096
+    ],
+    [
+     512,
+     4096
+    ]
+   ]
+  }
+ },
+ "batched_matmul": {
+  "category": "matmul",
+  "dtypes": null,
+  "entry": "pallas_batched_matmul",
+  "family": "dense_matmul",
+  "file": "level1/batched_matmul.py",
+  "input_shapes": [
+   [
+    8,
+    256,
+    256
+   ],
+   [
+    8,
+    256,
+    256
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Batched GEMM for multi-head attention",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/tpu/matmul.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "clamp": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_clamp",
+  "family": "elementwise_unary",
+  "file": "level1/clamp.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Clip/clamp for gradient clipping patterns",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "cosine_sim": {
+  "category": "loss",
+  "dtypes": null,
+  "entry": "pallas_cosine_sim",
+  "family": "similarity_loss",
+  "file": "level1/cosine_sim.py",
+  "input_shapes": [
+   [
+    2048,
+    1024
+   ],
+   [
+    2048,
+    1024
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Cosine similarity for embedding retrieval",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/jax/_src/nn/functions.py",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "cross_entropy": {
+  "category": "loss",
+  "dtypes": null,
+  "entry": "pallas_cross_entropy",
+  "family": "cross_entropy",
+  "file": "level1/cross_entropy.py",
+  "input_shapes": [
+   [
+    1024,
+    512
+   ],
+   [
+    1024,
+    512
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Derived from tokamax linear_softmax_cross_entropy_loss",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/linear_softmax_cross_entropy_loss/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null
+ },
+ "embedding_lookup": {
+  "category": "embedding",
+  "dtypes": [
+   "float32",
+   "int32"
+  ],
+  "entry": "pallas_embedding_lookup",
+  "excluded": "does not lower on TPU at any shape: the kernel body is `o_ref[...] = table_ref[idx, :]`, a vector gather from a VMEM ref, which Mosaic rejects with `ValueError: Cannot do int indexing on TPU` during tracing -- before any shape or memory consideration.",
+  "family": "embedding_lookup",
+  "file": "level1/embedding_lookup.py",
+  "input_shapes": [
+   [
+    32000,
+    768
+   ],
+   [
+    512
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Gather-style embedding, SparseCore optimized on TPU",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/tpu/sparsecore.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "exp": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_exp",
+  "family": "elementwise_unary",
+  "file": "level1/exp_op.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Transcendental exp, core of softmax and loss functions",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "flash_attention": {
+  "category": "attention",
+  "dtypes": null,
+  "entry": "pallas_flash_attention",
+  "family": "flash_attention",
+  "file": "level3/flash_attention.py",
+  "input_shapes": [
+   [
+    512,
+    64
+   ],
+   [
+    512,
+    64
+   ],
+   [
+    512,
+    64
+   ]
+  ],
+  "level": 3,
+  "provenance": {
+   "description": "Official JAX Pallas flash attention TPU kernel",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/jax/experimental/pallas/ops/tpu/flash_attention.py",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "fused_softmax_cross_entropy": {
+  "category": "loss",
+  "dtypes": null,
+  "entry": "pallas_fused_softmax_cross_entropy",
+  "family": "cross_entropy",
+  "file": "level2/fused_softmax_cross_entropy.py",
+  "input_shapes": [
+   [
+    1024,
+    512
+   ],
+   [
+    1024,
+    512
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "tokamax.linear_softmax_cross_entropy_loss \u2014 memory efficient",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/linear_softmax_cross_entropy_loss/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null
+ },
+ "gated_mlp": {
+  "category": "moe",
+  "dtypes": null,
+  "entry": "pallas_gated_mlp",
+  "family": "gated_mlp",
+  "file": "level3/gated_mlp.py",
+  "input_shapes": [
+   [
+    256,
+    512
+   ],
+   [
+    512,
+    1024
+   ],
+   [
+    512,
+    1024
+   ],
+   [
+    1024,
+    512
+   ]
+  ],
+  "level": 3,
+  "provenance": {
+   "description": "Full gated MLP block using tokamax gated_linear_unit",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/gated_linear_unit/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null
+ },
+ "geglu": {
+  "category": "moe",
+  "dtypes": null,
+  "entry": "pallas_geglu",
+  "family": "gated_mlp",
+  "file": "level2/geglu.py",
+  "input_shapes": [
+   [
+    512,
+    1024
+   ],
+   [
+    1024,
+    2048
+   ],
+   [
+    1024,
+    2048
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "tokamax.gated_linear_unit \u2014 GeGLU variant (PaLM/Gemma)",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/gated_linear_unit/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null
+ },
+ "gelu": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_gelu",
+  "family": "activation",
+  "file": "level1/gelu.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Transcendental function (tanh) inside Pallas kernel",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "layernorm": {
+  "category": "normalization",
+  "dtypes": null,
+  "entry": "pallas_layernorm",
+  "family": "layer_norm",
+  "file": "level1/layernorm.py",
+  "input_shapes": [
+   [
+    2048,
+    1024
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "tokamax.layer_norm production kernel",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/normalization/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null
+ },
+ "layernorm_residual": {
+  "category": "normalization",
+  "dtypes": null,
+  "entry": "pallas_layernorm_residual",
+  "family": "norm_residual",
+  "file": "level2/layernorm_residual.py",
+  "input_shapes": [
+   [
+    2048,
+    1024
+   ],
+   [
+    2048,
+    1024
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "Pre-norm residual pattern from MaxText attention blocks",
+   "domain": "Google AI",
+   "reference": "https://github.com/AI-Hypercomputer/maxtext/blob/main/src/maxtext/layers/normalizations.py",
+   "source": "AI-Hypercomputer/maxtext"
+  },
+  "ranges": null
+ },
+ "linear_bias_relu": {
+  "category": "matmul",
+  "dtypes": null,
+  "entry": "pallas_linear_bias_relu",
+  "family": "matmul_activation",
+  "file": "level2/linear_bias_relu.py",
+  "input_shapes": [
+   [
+    1024,
+    1024
+   ],
+   [
+    1024,
+    2048
+   ],
+   [
+    2048
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "Keras FusedDense with bias: matmul+bias+relu",
+   "domain": "Keras",
+   "reference": "https://github.com/keras-team/keras-io/blob/master/guides/define_custom_kernel.py",
+   "source": "keras-team/keras-io"
+  },
+  "ranges": null
+ },
+ "log": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_log",
+  "family": "elementwise_unary",
+  "file": "level1/log_op.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Transcendental log, used in cross-entropy",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": [
+   [
+    0.1,
+    5.0
+   ]
+  ],
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "log_softmax": {
+  "category": "normalization",
+  "dtypes": null,
+  "entry": "pallas_log_softmax",
+  "family": "softmax",
+  "file": "level1/log_softmax.py",
+  "input_shapes": [
+   [
+    2048,
+    2048
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Log-softmax component of tokamax cross-entropy kernel",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/linear_softmax_cross_entropy_loss/reference.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e's scoped-VMEM limit is 32 MiB (E1001 CompileTimeScopedVmemOom), and at the native 2048x2048 f32 this kernel needs 37.11 MiB once its max/sum/exp intermediates are counted. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     2048
+    ]
+   ]
+  }
+ },
+ "matmul": {
+  "category": "matmul",
+  "dtypes": null,
+  "entry": "pallas_matmul",
+  "family": "dense_matmul",
+  "file": "level1/matmul.py",
+  "input_shapes": [
+   [
+    1024,
+    1024
+   ],
+   [
+    1024,
+    1024
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Official Pallas TPU matmul tutorial with BlockSpec tiling",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/tpu/matmul.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "matmul_gelu": {
+  "category": "matmul",
+  "dtypes": null,
+  "entry": "pallas_matmul_gelu",
+  "family": "matmul_activation",
+  "file": "level2/matmul_gelu.py",
+  "input_shapes": [
+   [
+    1024,
+    1024
+   ],
+   [
+    1024,
+    1024
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "FusedDense variant with GELU activation",
+   "domain": "Keras",
+   "reference": "https://github.com/keras-team/keras-io/blob/master/guides/define_custom_kernel.py",
+   "source": "keras-team/keras-io"
+  },
+  "ranges": null
+ },
+ "matmul_relu": {
+  "category": "matmul",
+  "dtypes": null,
+  "entry": "pallas_matmul_relu",
+  "family": "matmul_activation",
+  "file": "level2/matmul_relu.py",
+  "input_shapes": [
+   [
+    1024,
+    1024
+   ],
+   [
+    1024,
+    1024
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "Keras FusedDense tutorial: matmul + activation in one kernel",
+   "domain": "Keras",
+   "reference": "https://github.com/keras-team/keras-io/blob/master/guides/define_custom_kernel.py",
+   "source": "keras-team/keras-io"
+  },
+  "ranges": null
+ },
+ "matmul_silu": {
+  "category": "matmul",
+  "dtypes": null,
+  "entry": "pallas_matmul_silu",
+  "family": "matmul_activation",
+  "file": "level2/matmul_silu.py",
+  "input_shapes": [
+   [
+    1024,
+    1024
+   ],
+   [
+    1024,
+    1024
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "SiLU gate matmul from tokamax gated_linear_unit",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/gated_linear_unit/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null
+ },
+ "mse_loss": {
+  "category": "loss",
+  "dtypes": null,
+  "entry": "pallas_mse_loss",
+  "family": "similarity_loss",
+  "file": "level1/mse_loss.py",
+  "input_shapes": [
+   [
+    2048,
+    1024
+   ],
+   [
+    2048,
+    1024
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Standard regression loss via jnp.mean / jnp.square",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/jax/_src/numpy/lax_numpy.py",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "multi_head_attention": {
+  "category": "attention",
+  "dtypes": null,
+  "entry": "pallas_multi_head_attention",
+  "family": "multi_head_attention",
+  "file": "level3/multi_head_attention.py",
+  "input_shapes": [
+   [
+    8,
+    256,
+    64
+   ],
+   [
+    8,
+    256,
+    64
+   ],
+   [
+    8,
+    256,
+    64
+   ]
+  ],
+  "level": 3,
+  "provenance": {
+   "description": "MaxText splash attention training kernel pattern",
+   "domain": "Google AI",
+   "reference": "https://github.com/AI-Hypercomputer/maxtext/blob/main/src/maxtext/kernels/attention/splash_attention_kernel.py",
+   "source": "AI-Hypercomputer/maxtext"
+  },
+  "ranges": null
+ },
+ "multiply": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_multiply",
+  "family": "elementwise_binary",
+  "file": "level1/multiply_op.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ],
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Binary elementwise multiply for gating and scaling",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the two inputs and the output are 64 MiB each, and the compiler reports using 192.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     512,
+     4096
+    ],
+    [
+     512,
+     4096
+    ]
+   ]
+  }
+ },
+ "nucleotide_onehot": {
+  "category": "other",
+  "dtypes": [
+   "int32"
+  ],
+  "entry": "pallas_nucleotide_onehot",
+  "family": "genomics",
+  "file": "level1/nucleotide_onehot.py",
+  "input_shapes": [
+   [
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "DNA nucleotide one-hot encoding (A/C/G/T -> 4-channel) from Enformer input pipeline",
+   "domain": "Genomics",
+   "reference": "https://github.com/google-deepmind/deepmind-research/blob/master/enformer/enformer.py",
+   "source": "google-deepmind/deepmind-research"
+  },
+  "ranges": null
+ },
+ "one_hot": {
+  "category": "embedding",
+  "dtypes": [
+   "int32"
+  ],
+  "entry": "pallas_one_hot",
+  "family": "one_hot",
+  "file": "level1/one_hot.py",
+  "input_shapes": [
+   [
+    512
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "One-hot encoding for label preparation",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/jax/_src/nn/functions.py",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "outer_product": {
+  "category": "matmul",
+  "dtypes": null,
+  "entry": "pallas_outer_product",
+  "family": "dense_matmul",
+  "file": "level1/outer_product.py",
+  "input_shapes": [
+   [
+    1024
+   ],
+   [
+    1024
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Rank-1 update pattern used in Evoformer outer product mean",
+   "domain": "Scientific AI",
+   "reference": "https://github.com/google-deepmind/alphafold3/blob/main/src/alphafold3/model/network/evoformer.py",
+   "source": "google-deepmind/alphafold3"
+  },
+  "ranges": null
+ },
+ "pairwise_distance": {
+  "category": "other",
+  "dtypes": null,
+  "entry": "pallas_pairwise_distance",
+  "family": "genomics",
+  "file": "level2/pairwise_distance.py",
+  "input_shapes": [
+   [
+    256,
+    32
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "Pairwise Euclidean distance matrix for structural biology distance maps",
+   "domain": "Genomics",
+   "reference": "https://github.com/google-deepmind/alphafold3/blob/main/src/alphafold3/jax/geometry/vector.py",
+   "source": "google-deepmind/alphafold3"
+  },
+  "ranges": null
+ },
+ "pwm_scan": {
+  "category": "other",
+  "dtypes": null,
+  "entry": "pallas_pwm_scan",
+  "family": "genomics",
+  "file": "level2/pwm_scan.py",
+  "input_shapes": [
+   [
+    1024,
+    4
+   ],
+   [
+    4,
+    12
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "Position Weight Matrix motif scanning \u2014 Enformer conv tower / PWMScan (Bioinformatics 2018)",
+   "domain": "Genomics",
+   "reference": "https://github.com/google-deepmind/deepmind-research/blob/master/enformer/enformer.py",
+   "source": "google-deepmind/deepmind-research"
+  },
+  "ranges": null
+ },
+ "qk_softmax": {
+  "category": "attention",
+  "dtypes": null,
+  "entry": "pallas_qk_softmax",
+  "family": "qk_softmax",
+  "file": "level2/qk_softmax.py",
+  "input_shapes": [
+   [
+    256,
+    64
+   ],
+   [
+    256,
+    64
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "QK^T+softmax component from JAX flash_attention.py",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/jax/experimental/pallas/ops/tpu/flash_attention.py",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "reduce_max": {
+  "category": "reduction",
+  "dtypes": null,
+  "entry": "pallas_reduce_max",
+  "family": "reduction",
+  "file": "level1/reduce_max.py",
+  "input_shapes": [
+   [
+    4096,
+    2048
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Max reduction, tested against argmax TPU issue #34620",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/issues/34620",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e's scoped-VMEM limit is 32 MiB (E1001 CompileTimeScopedVmemOom), and at the native 4096x2048 f32 this kernel needs 33.71 MiB of scoped allocation. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     2048,
+     2048
+    ]
+   ]
+  }
+ },
+ "reduce_mean": {
+  "category": "reduction",
+  "dtypes": null,
+  "entry": "pallas_reduce_mean",
+  "family": "reduction",
+  "file": "level1/reduce_mean.py",
+  "input_shapes": [
+   [
+    4096,
+    2048
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Mean reduction, building block for normalization",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e's scoped-VMEM limit is 32 MiB (E1001 CompileTimeScopedVmemOom), and at the native 4096x2048 f32 this kernel needs 33.71 MiB of scoped allocation. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     2048,
+     2048
+    ]
+   ]
+  }
+ },
+ "reduce_sum": {
+  "category": "reduction",
+  "dtypes": null,
+  "entry": "pallas_reduce_sum",
+  "family": "reduction",
+  "file": "level1/reduce_sum.py",
+  "input_shapes": [
+   [
+    4096,
+    2048
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Row-wise reduction pattern from Pallas quickstart",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e's scoped-VMEM limit is 32 MiB (E1001 CompileTimeScopedVmemOom), and at the native 4096x2048 f32 this kernel needs 33.71 MiB of scoped allocation. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     2048,
+     2048
+    ]
+   ]
+  }
+ },
+ "relu": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_relu",
+  "family": "activation",
+  "file": "level1/relu.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Pallas quickstart tutorial elementwise kernel pattern",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "rmsnorm": {
+  "category": "normalization",
+  "dtypes": null,
+  "entry": "pallas_rmsnorm",
+  "family": "rms_norm",
+  "file": "level1/rmsnorm.py",
+  "input_shapes": [
+   [
+    2048,
+    1024
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "change": "use jax.lax.rsqrt to match the JAX 0.10 API where jnp.rsqrt was removed",
+   "description": "pallas-forge RMSNorm kernel (3.44x over XLA)",
+   "domain": "Community",
+   "reference": "https://github.com/linhkid/pallas-forge/blob/main/pallas_forge/kernels/rmsnorm.py",
+   "source": "linhkid/pallas-forge"
+  },
+  "ranges": null
+ },
+ "rmsnorm_residual": {
+  "category": "normalization",
+  "dtypes": null,
+  "entry": "pallas_rmsnorm_residual",
+  "family": "norm_residual",
+  "file": "level2/rmsnorm_residual.py",
+  "input_shapes": [
+   [
+    2048,
+    1024
+   ],
+   [
+    2048,
+    1024
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "change": "reuse the shared jax.lax.rsqrt fallback so fused RMSNorm works on CPU interpret mode",
+   "description": "pallas-forge fused RMSNorm+residual (3.44x over XLA)",
+   "domain": "Community",
+   "reference": "https://github.com/linhkid/pallas-forge/blob/main/pallas_forge/kernels/rmsnorm.py",
+   "source": "linhkid/pallas-forge"
+  },
+  "ranges": null
+ },
+ "rsqrt": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_rsqrt",
+  "family": "elementwise_unary",
+  "file": "level1/rsqrt_op.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "change": "call jax.lax.rsqrt instead of deprecated jnp.rsqrt so CPU interpret mode stays valid",
+   "description": "Reciprocal sqrt critical in normalization layers",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/jax/_src/lax/lax.py",
+   "source": "jax-ml/jax"
+  },
+  "ranges": [
+   [
+    0.1,
+    5.0
+   ]
+  ],
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "sigmoid": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_sigmoid",
+  "family": "activation",
+  "file": "level1/sigmoid.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Logistic sigmoid, gating primitive",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/jax/_src/nn/functions.py",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "sigmoid_bce": {
+  "category": "loss",
+  "dtypes": null,
+  "entry": "pallas_sigmoid_bce",
+  "family": "binary_cross_entropy",
+  "file": "level2/sigmoid_bce.py",
+  "input_shapes": [
+   [
+    2048,
+    1024
+   ],
+   [
+    2048,
+    1024
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "Numerically stable fused sigmoid + binary cross-entropy",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/jax/_src/nn/functions.py",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null
+ },
+ "silu": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_silu",
+  "family": "activation",
+  "file": "level1/silu.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "SiLU gate path from tokamax gated_linear_unit kernel",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/gated_linear_unit/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "softmax": {
+  "category": "normalization",
+  "dtypes": null,
+  "entry": "pallas_softmax",
+  "family": "softmax",
+  "file": "level1/softmax.py",
+  "input_shapes": [
+   [
+    2048,
+    2048
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Numerically stable softmax with max subtraction",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e's scoped-VMEM limit is 32 MiB (E1001 CompileTimeScopedVmemOom), and at the native 2048x2048 f32 this kernel needs 37.02 MiB once its max/sum/exp intermediates are counted. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     2048
+    ]
+   ]
+  }
+ },
+ "swiglu": {
+  "category": "moe",
+  "dtypes": null,
+  "entry": "pallas_swiglu",
+  "family": "gated_mlp",
+  "file": "level2/swiglu.py",
+  "input_shapes": [
+   [
+    512,
+    1024
+   ],
+   [
+    1024,
+    2048
+   ],
+   [
+    1024,
+    2048
+   ]
+  ],
+  "level": 2,
+  "provenance": {
+   "description": "tokamax.gated_linear_unit \u2014 SwiGLU variant",
+   "domain": "OpenXLA",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/gated_linear_unit/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null
+ },
+ "tanh": {
+  "category": "elementwise",
+  "dtypes": null,
+  "entry": "pallas_tanh",
+  "family": "activation",
+  "file": "level1/tanh_act.py",
+  "input_shapes": [
+   [
+    4096,
+    4096
+   ]
+  ],
+  "level": 1,
+  "provenance": {
+   "description": "Core transcendental used in GELU approximation",
+   "domain": "JAX Core",
+   "reference": "https://github.com/jax-ml/jax/blob/main/docs/pallas/quickstart.ipynb",
+   "source": "jax-ml/jax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e has 127.94 MiB of VMEM, and the kernel maps whole arrays into it at once: at the native 4096x4096 f32 the input and output windows are 64 MiB each, and the compiler reports using 128.00 MiB of 127.94 MiB. Largest power-of-two reduction of the leading dimension that compiles.",
+   "shapes": [
+    [
+     1024,
+     4096
+    ]
+   ]
+  }
+ },
+ "transformer_block": {
+  "category": "other",
+  "dtypes": null,
+  "entry": "pallas_transformer_block",
+  "family": "transformer_block",
+  "file": "level3/transformer_block.py",
+  "input_shapes": [
+   [
+    128,
+    256
+   ],
+   [
+    256,
+    64
+   ],
+   [
+    256,
+    64
+   ],
+   [
+    256,
+    64
+   ],
+   [
+    64,
+    256
+   ],
+   [
+    256,
+    256
+   ]
+  ],
+  "level": 3,
+  "provenance": {
+   "change": "swap jnp.rsqrt for jax.lax.rsqrt so CPU interpret mode keeps matching the baseline",
+   "description": "Simplified pre-norm transformer block from MaxText arch",
+   "domain": "Google AI",
+   "reference": "https://github.com/AI-Hypercomputer/maxtext/blob/main/src/maxtext/layers/decoders.py",
+   "source": "AI-Hypercomputer/maxtext"
+  },
+  "ranges": null
+ },
+ "triangle_update": {
+  "category": "other",
+  "dtypes": null,
+  "entry": "pallas_triangle_update",
+  "family": "genomics",
+  "file": "level3/triangle_update.py",
+  "input_shapes": [
+   [
+    64,
+    64,
+    32
+   ],
+   [
+    64,
+    64
+   ]
+  ],
+  "level": 3,
+  "provenance": {
+   "description": "Triangle multiplication update used in AlphaFold-style Pairformer",
+   "domain": "Genomics",
+   "reference": "https://github.com/openxla/tokamax/blob/main/tokamax/_src/ops/triangle_multiplication/api.py",
+   "source": "openxla/tokamax"
+  },
+  "ranges": null,
+  "validation": {
+   "reason": "this v6e's scoped-VMEM limit is 32 MiB (E1001 CompileTimeScopedVmemOom), and the kernel materialises a (c, n, n, n) outer product -- 33.5 MiB at the native n=64 -- for a 39.08 MiB scoped allocation. n is the leading dimension of both inputs, so halving it is coherent.",
+   "shapes": [
+    [
+     32,
+     32,
+     32
+    ],
+    [
+     32,
+     32
+    ]
+   ]
+  }
+ }
+}

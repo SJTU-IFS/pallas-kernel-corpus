@@ -1,0 +1,73 @@
+{
+  "config": "matmul+gather-sparsecore",
+  "family": "sparsecore_ragged_gather",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "shape": {
+    "workload": "matmul",
+    "matmul_n": 8192,
+    "gmm": null,
+    "gather": {
+      "num_rows": 4096,
+      "hidden": 1024,
+      "out_rows": 32768,
+      "dtype": "bfloat16"
+    }
+  },
+  "matmul_dtype": "bfloat16",
+  "gather_dtype": "bfloat16",
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "pallas_launches": 1,
+  "device_timing": {
+    "n": 50,
+    "min_ms": 1.57374,
+    "median_ms": 1.578915625,
+    "mean_ms": 1.5788339671600002,
+    "std_ms": 0.0022392811969418566,
+    "p5_ms": 1.5753201560999999,
+    "p95_ms": 1.5827375625
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 1.751760020852089,
+    "median_ms": 1.7658399883657694,
+    "mean_ms": 1.7658351850695908,
+    "std_ms": 0.00496164007877522,
+    "p5_ms": 1.756094495067373,
+    "p95_ms": 1.773298584157601
+  },
+  "matmul_flops": 1099511627776,
+  "gather_bytes_moved": 134348800,
+  "matmul_tflops": 696.3713642241015,
+  "workload_arithmetic_intensity": 2730.6666666666665,
+  "v6e_ridge_point_flop_per_byte": 559.7560975609756,
+  "sparsecore_overlapped_fraction": 1.0,
+  "trace_overlap_detail": {
+    "tensorcore_busy_us": 1564.9162499999984,
+    "tensorcore_ops_counted": 1,
+    "tensorcore_ops_excluded_as_offload_stubs": 4,
+    "workload_sparsecore_busy_us": 0,
+    "workload_sparsecore_op_names": [],
+    "sparsecore_busy_us": 505.16859399999885,
+    "overlap_us": 505.16859399999885,
+    "sparsecore_overlapped_fraction": 1.0,
+    "tensorcore_window": [
+      17746.055,
+      19310.97125
+    ],
+    "sparsecore_window": [
+      17750.063828,
+      18255.2325
+    ],
+    "sparsecore_op_names": [
+      "sc_ragged_gather.5.cloned.1.call-start",
+      "sc_ragged_gather.5.cloned.1.call-done",
+      "sc_ragged_gather.5.cloned.1.call-start",
+      "sc_ragged_gather.5.cloned.1.call-done"
+    ]
+  },
+  "traces_kept": false
+}

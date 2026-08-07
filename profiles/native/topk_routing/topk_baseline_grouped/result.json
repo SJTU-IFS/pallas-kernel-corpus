@@ -1,0 +1,164 @@
+{
+  "implementation": "topk-baseline-grouped",
+  "run_label": "",
+  "family": "topk_routing",
+  "contract": "router_grouped_topk",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "dtype": "bfloat16",
+  "shape": {
+    "batch": 4096,
+    "num_experts": 256,
+    "topk": 8
+  },
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "correctness": {
+    "cosine_similarity": 1.0,
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "status": "PASS",
+    "exact_match_failures": 0,
+    "per_leaf": [
+      {
+        "leaf": 0,
+        "dtype": "float32",
+        "cosine_similarity": 1.0,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0
+      },
+      {
+        "leaf": 1,
+        "dtype": "int32",
+        "exact_match": true
+      }
+    ],
+    "reference": "router_grouped_topk"
+  },
+  "flops": {},
+  "primary_flops_convention": null,
+  "logical_flops": null,
+  "flop_accounting_notes": [
+    "top-k is a selection kernel, so MXU utilization is not reported; the metric is achieved bandwidth over the router logits it must read and the selection it writes",
+    "correctness is exact: expert ids must match bitwise and selected weights to 0.0, not merely to a cosine threshold",
+    "num_experts must be a multiple of 128 -- the kernels reject anything else"
+  ],
+  "reference_cost_analysis": {
+    "utilization0{}": 52.03125,
+    "bytes accessedout{}": 360069152.0,
+    "bytes accessed2{}": 10619392.0,
+    "bytes accessed0{}": 2276084224.0,
+    "bytes accessed1{}": 111691264.0,
+    "optimal_seconds": 0.0016671997727826238,
+    "bytes accessed": 2730872832.0,
+    "utilization1{}": 25.0,
+    "utilization2{}": 11.0,
+    "flops": 46628864.0
+  },
+  "implementation_cost_analysis": {
+    "utilization2{}": 11.0,
+    "utilization1{}": 25.0,
+    "flops": 46628864.0,
+    "bytes accessedout{}": 360069152.0,
+    "bytes accessed0{}": 2276084224.0,
+    "bytes accessed1{}": 111691264.0,
+    "optimal_seconds": 0.0016671997727826238,
+    "utilization0{}": 52.03125,
+    "bytes accessed": 2730872832.0,
+    "bytes accessed2{}": 10619392.0
+  },
+  "device_timing": {
+    "n": 50,
+    "min_ms": 2.47532625,
+    "median_ms": 2.478721953,
+    "mean_ms": 2.47900941876,
+    "std_ms": 0.002391808541787475,
+    "p5_ms": 2.4755123321,
+    "p95_ms": 2.4831934024
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 2.6601399877108634,
+    "median_ms": 2.6757549785543233,
+    "mean_ms": 2.677293767919764,
+    "std_ms": 0.0086611310555442,
+    "p5_ms": 2.666551523725502,
+    "p95_ms": 2.6930940250167623
+  },
+  "trace_event_names": [
+    "jit_router_grouped_topk(8737331469618446706)"
+  ],
+  "native_source_shape": false,
+  "kernel_config": {
+    "topk": 8,
+    "num_expert_group": 8,
+    "topk_group": 4
+  },
+  "bytes": {
+    "logits_and_selection": {
+      "bytes": 4456448,
+      "achieved_gbytes_per_second": 1.797881361645406
+    }
+  },
+  "primary_bytes_convention": "logits_and_selection",
+  "bytes_moved": 4456448,
+  "achieved_gbytes_per_second": 1.797881361645406,
+  "achieved_tflops": null,
+  "mxu_utilization_pct": null,
+  "v6e_peak_tflops_bf16": 918.0,
+  "trace_directory": "profiles/native/topk_routing/topk_baseline_grouped/trace",
+  "trace_chunks": [
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_000",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_001",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_002",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_003",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_004",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_005",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_006",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_007",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_008",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_009",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_010",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_011",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_012",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_013",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_014",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_015",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_016",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_017",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_018",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_019",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_020",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_021",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_022",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_023",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_024",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_025",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_026",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_027",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_028",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_029",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_030",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_031",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_032",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_033",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_034",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_035",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_036",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_037",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_038",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_039",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_040",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_041",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_042",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_043",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_044",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_045",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_046",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_047",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_048",
+    "profiles/native/topk_routing/topk_baseline_grouped/trace/chunk_049"
+  ]
+}

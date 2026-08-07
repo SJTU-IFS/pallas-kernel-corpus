@@ -1,0 +1,73 @@
+{
+  "config": "matmul+gather-sparsecore",
+  "family": "sparsecore_ragged_gather",
+  "jax_version": "0.10.2",
+  "devices": [
+    "TPU_0(process=0,(0,0,0,0))"
+  ],
+  "shape": {
+    "workload": "matmul",
+    "matmul_n": 8192,
+    "gmm": null,
+    "gather": {
+      "num_rows": 4096,
+      "hidden": 1024,
+      "out_rows": 16384,
+      "dtype": "bfloat16"
+    }
+  },
+  "matmul_dtype": "bfloat16",
+  "gather_dtype": "bfloat16",
+  "warmup_iterations": 5,
+  "profiled_iterations": 50,
+  "pallas_launches": 1,
+  "device_timing": {
+    "n": 50,
+    "min_ms": 1.5454812500000001,
+    "median_ms": 1.549165586,
+    "mean_ms": 1.5494049062400002,
+    "std_ms": 0.0022516455902902464,
+    "p5_ms": 1.5460411327999999,
+    "p95_ms": 1.5532569024
+  },
+  "wall_timing": {
+    "n": 50,
+    "min_ms": 1.735780038870871,
+    "median_ms": 1.743909961078316,
+    "mean_ms": 1.7449295660480857,
+    "std_ms": 0.006533656605790685,
+    "p5_ms": 1.7368764616549015,
+    "p95_ms": 1.7575905018020421
+  },
+  "matmul_flops": 1099511627776,
+  "gather_bytes_moved": 67174400,
+  "matmul_tflops": 709.744418358129,
+  "workload_arithmetic_intensity": 2730.6666666666665,
+  "v6e_ridge_point_flop_per_byte": 559.7560975609756,
+  "sparsecore_overlapped_fraction": 1.0,
+  "trace_overlap_detail": {
+    "tensorcore_busy_us": 1536.9200779999992,
+    "tensorcore_ops_counted": 1,
+    "tensorcore_ops_excluded_as_offload_stubs": 4,
+    "workload_sparsecore_busy_us": 0,
+    "workload_sparsecore_op_names": [],
+    "sparsecore_busy_us": 257.95507799999905,
+    "overlap_us": 257.95507799999905,
+    "sparsecore_overlapped_fraction": 1.0,
+    "tensorcore_window": [
+      18723.555,
+      20260.475078
+    ],
+    "sparsecore_window": [
+      18727.730078,
+      18985.686406
+    ],
+    "sparsecore_op_names": [
+      "sc_ragged_gather.5.cloned.1.call-start",
+      "sc_ragged_gather.5.cloned.1.call-done",
+      "sc_ragged_gather.5.cloned.1.call-start",
+      "sc_ragged_gather.5.cloned.1.call-done"
+    ]
+  },
+  "traces_kept": false
+}

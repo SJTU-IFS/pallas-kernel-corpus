@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# uv-managed virtualenv; recreate with `uv sync`
+.venv/
+
+# Editor / tooling state
+.idea/
+.vscode/
+.DS_Store
+
+# Claude Code local permission cache (machine-specific)
+.claude/settings.local.json
+
+# Profiling traces are large and regenerated per run; the summarised
+# result.json and report.md beside them are what this corpus keeps.
+profiles/**/trace/
