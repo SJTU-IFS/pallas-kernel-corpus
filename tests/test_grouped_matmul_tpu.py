@@ -58,6 +58,41 @@ def cosine(actual, expected) -> float:
     return float(a @ e / (np.linalg.norm(a) * np.linalg.norm(e) + 1e-12))
 
 
+def rms_relative(actual, expected) -> float:
+    """RMS error relative to the reference's own RMS magnitude."""
+    a = np.asarray(actual, np.float32).ravel()
+    e = np.asarray(expected, np.float32).ravel()
+    return float(np.sqrt(((a - e) ** 2).mean())
+                 / (np.sqrt((e ** 2).mean()) + 1e-12))
+
+
+def assert_matches(actual, expected, name: str = "", *,
+                   cos_bar: float = 0.9999, rms_bar: float = 2e-2) -> None:
+    """Direction *and* magnitude, because `cosine` alone checks only direction.
+
+    `cosine` is scale-invariant: an output multiplied by any constant -- 0.5,
+    2, a million -- still scores 1.0 against its reference and sails past a
+    0.9999 bar. A wrong dequantization scalar, fp8 scale or softmax
+    normalisation constant is exactly that kind of error, and it is a plausible
+    failure mode for these kernels, so direction alone is not evidence.
+
+    The RMS-relative bar is this corpus's own existing pattern, used in the
+    splash and flash backward tests and in gated linear attention. 2e-2 is the
+    value those chose. It is comfortably satisfied here: at the 0.9999 cosine
+    bar the angular term alone contributes sqrt(2*(1-0.9999)) = 1.4e-2, and the
+    cosines this suite actually records are 0.99997 or better, putting the
+    angular contribution at 7.7e-3 or less. What the bar catches is any scale
+    error above ~2%.
+    """
+    a = np.asarray(actual, np.float32)
+    e = np.asarray(expected, np.float32)
+    label = f"{name}: " if name else ""
+    similarity = cosine(a, e)
+    assert similarity > cos_bar, f"{label}cosine {similarity} <= {cos_bar}"
+    scale = rms_relative(a, e)
+    assert scale < rms_bar, f"{label}RMS-relative {scale} >= {rms_bar}"
+
+
 IMPLEMENTATIONS = ("jaxbench", "tpu_inference", "sglang_jax")
 
 
@@ -76,7 +111,7 @@ def test_matches_pure_jax_reference(modules, implementation, balanced):
     expected = jax.jit(reference)(*inputs)
     actual = jax.jit(modules[implementation].kernel)(*inputs)
     assert actual.shape == expected.shape
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
     assert float(jnp.max(jnp.abs(actual - expected))) < 1e-3
 
 
@@ -128,7 +163,7 @@ def test_covered_rows_agree_when_a_group_is_empty(modules):
     expected = np.asarray(jax.jit(baseline.grouped_matmul_loop)(lhs, rhs, group_sizes))
     for name in IMPLEMENTATIONS:
         got = np.asarray(jax.jit(modules[name].kernel)(lhs, rhs, group_sizes))
-        assert cosine(got[covered], expected[covered]) > 0.9999, name
+        assert_matches(got[covered], expected[covered], name)
         assert np.abs(got[covered] - expected[covered]).max() < 1e-3, name
 
 

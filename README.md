@@ -33,7 +33,7 @@ directories:
   needs;
 - optimized files do not import their original repository package;
 - each file exposes a callable `kernel` (or documents multiple named entry
-  points) and a `SOURCE` metadata dictionary. Eleven of the 108 also carry a
+  points) and a `SOURCE` metadata dictionary. Twelve of the 113 also carry a
   `python file.py` smoke runner, inherited from upstream; that was an early
   convention rather than a corpus-wide one, and the test suite is what actually
   exercises every file;
@@ -106,13 +106,16 @@ the traced measurement before any other work, and reports which limit a short
 trace hit. See `profiles/native/mla_attention/report.md` §7.
 
 Most migrated launches are forward passes. **Backward passes are covered in
-three families**: splash attention (backward-dQ and backward-dKV from both
+four families**: splash attention (backward-dQ and backward-dKV from both
 JAXBench and MaxText), flash attention (JAXBench dQ/dKV plus Tokamax's splash
 dKV), and grouped matmul (JAXBench's `tgmm` plus `tgmm_v2` from MaxText and
 Tokamax), and **cross entropy** (Tokamax's
 `linear_softmax_cross_entropy_loss`, both directions). **No backward launch
-point is open**: the only unmigrated ones are the v1 `tgmm`s, deliberately
-deferred on qwix.
+point is open**. Of the 18 TPU-compatible backward launch points, 12 are
+migrated, 2 are the v1 `tgmm`s deliberately deferred on qwix, and 4 are
+excluded as duplicates — JAXBench's `3p_MLA_Attention` and `4p_Sparse_Attention`
+backward-dQ/dKV, each AST-identical to a migrated counterpart, so no backward
+kernel *code* is missing from the corpus.
 
 **Nothing is open.** All 156 audited TPU launch points are accounted for: 136
 migrated and validated, 5 **prepared**, 11 excluded with evidence, 4 deliberately
@@ -169,8 +172,11 @@ rather than a judgement call:
 > constant everywhere — would still pass it.
 
 It intercepts `assert_allclose`, `assert_array_equal` and the per-module
-`cosine` / `_close` helpers, which between them are every numeric comparison the
-suite makes, and reports the ones a degenerate output would satisfy. The worked
+`cosine` / `_close` helpers. That is most of the suite's numeric comparisons but
+not all of them: a test that compares through its own local helper — as
+`test_ragged_mqa_attention.py` and two `test_sparsecore_ragged_gather_tpu.py`
+sites do — is invisible to the sweep. It reports the comparisons it does see
+that a degenerate output would satisfy. The worked
 example is DeepSeek-V4's sliding-window MLA: its attention sinks are drawn from
 [200, 500] while the logits reach ~135, so `exp(sink − m)` swamps the softmax
 denominator and **every output on both sides collapses to ~1e-26**. Three
@@ -660,7 +666,7 @@ code — the file's `get_kv_cache_shape` returns the 5-D shape and the kernel
 that benchmark is stale. A test pins both the working layout and the rejection.
 
 `batched_rpa` is the corpus's **largest implementation by module count** — nine
-upstream modules flattened in dependency order — and the only one carrying **two
+upstream modules flattened in dependency order — and one of eleven carrying **two
 launch points in one file**: a schedule-planning kernel runs first and decides
 which (sequence, page) pairs each grid step handles, then the attention kernel
 runs that plan. It batches work across sequences instead of looping per
@@ -791,8 +797,11 @@ one regime where it cannot win. Second, `ragged_gather_reduce` **silently falls
 back to XLA** when `x` fits comfortably in VMEM, so profiling it at a small
 shape compares XLA against itself and reports a tie. `tools/profile_kernel.py`
 now counts `tpu_custom_call`s in the lowered HLO and refuses to profile any
-non-reference implementation that lowers to zero; every `result.json` records
-`pallas_launches`.
+non-reference implementation that lowers to zero, and records
+`pallas_launches` in every `result.json` it writes. Note that 96 of the 147
+stored profiles carry the field: the other 51 predate the change and were
+never re-profiled, so they also lack the four other fields added at the same
+time. The guarantee is about the tool, not retroactively about the archive.
 
 Because a standalone timing is the wrong question for these kernels,
 `tools/overlap_harness.py` measures the right one: it times a TensorCore
@@ -857,7 +866,10 @@ identity and is therefore checked against `jnp.linalg.inv`, an oracle upstream
 had no hand in. That distinction matters: everywhere else in this family an
 error shared between kernel and reference would go unnoticed. The v3 pair is also a **diverged vendored copy** — tpu-inference
 `gdn/v3` and Tokamax `causal_conv1d_gated_delta_rule` share seven module names
-and 24 definition names but only ~42% AST-identical bodies, yet agree
+and 21 top-level functions (33 counting classes) of which roughly a third to a
+half are AST-identical — the exact figure depends on whether classes and
+docstrings are counted, and ranges 33%–52% across those choices; the ~42% quoted
+elsewhere is one such measurement, not a canonical one — yet they agree
 **bit-for-bit** on every output: the divergence is organisational, not
 numerical. Both are migrated so that stays measured rather than assumed.
 
@@ -1262,9 +1274,18 @@ flattening tools, the references and tests, the ledger, and the prose.
 Every optimized file records the exact repository, commit and upstream path in
 its `SOURCE` dictionary, and its docstring states what was changed to make it
 standalone. Where an upstream file carried a copyright header, that header is
-retained verbatim — 45 of the 108 do, which is exactly the set whose originals
-had one; the flattening tools preserve leading comments and never add a notice
-that upstream did not write.
+retained verbatim — 49 of the 113 do. That is **not** exactly the set whose
+originals had one: six files carry no notice although every upstream module
+they were built from does, because four of the flatten tools
+(`flatten_gdn.py`, `flatten_batched_rpa.py`, `flatten_dsv4_compressor.py`,
+`flatten_gla.py`) route through `strip_module_preamble`, which removes the
+licence block along with the module docstring and imports. The other flatten
+tools carry the header through, so this is an inconsistency rather than a
+policy. The six are the four `gated_delta_net` files, `ragged_paged_attention/
+tpu_inference_batched_optimized.py`, and `kv_cache_update/
+tpu_inference_dsv4_optimized.py`; for those, `SOURCE` and
+`THIRD_PARTY_NOTICES.md` are the attribution, not a retained header. What does
+hold is that no tool ever *adds* a notice upstream did not write.
 
 `LICENSE` is Apache-2.0, matching every upstream. `THIRD_PARTY_NOTICES.md` lists
 each project with the pinned commit its files came from. No upstream project

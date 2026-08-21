@@ -59,6 +59,41 @@ def cosine(actual, expected) -> float:
     return float(a @ e / (np.linalg.norm(a) * np.linalg.norm(e) + 1e-12))
 
 
+def rms_relative(actual, expected) -> float:
+    """RMS error relative to the reference's own RMS magnitude."""
+    a = np.asarray(actual, np.float32).ravel()
+    e = np.asarray(expected, np.float32).ravel()
+    return float(np.sqrt(((a - e) ** 2).mean())
+                 / (np.sqrt((e ** 2).mean()) + 1e-12))
+
+
+def assert_matches(actual, expected, name: str = "", *,
+                   cos_bar: float = 0.9999, rms_bar: float = 2e-2) -> None:
+    """Direction *and* magnitude, because `cosine` alone checks only direction.
+
+    `cosine` is scale-invariant: an output multiplied by any constant -- 0.5,
+    2, a million -- still scores 1.0 against its reference and sails past a
+    0.9999 bar. A wrong dequantization scalar, fp8 scale or softmax
+    normalisation constant is exactly that kind of error, and it is a plausible
+    failure mode for these kernels, so direction alone is not evidence.
+
+    The RMS-relative bar is this corpus's own existing pattern, used in the
+    splash and flash backward tests and in gated linear attention. 2e-2 is the
+    value those chose. It is comfortably satisfied here: at the 0.9999 cosine
+    bar the angular term alone contributes sqrt(2*(1-0.9999)) = 1.4e-2, and the
+    cosines this suite actually records are 0.99997 or better, putting the
+    angular contribution at 7.7e-3 or less. What the bar catches is any scale
+    error above ~2%.
+    """
+    a = np.asarray(actual, np.float32)
+    e = np.asarray(expected, np.float32)
+    label = f"{name}: " if name else ""
+    similarity = cosine(a, e)
+    assert similarity > cos_bar, f"{label}cosine {similarity} <= {cos_bar}"
+    scale = rms_relative(a, e)
+    assert scale < rms_bar, f"{label}RMS-relative {scale} >= {rms_bar}"
+
+
 def inputs(seed: int = 0):
     batch, heads, seq, dim = SHAPE
     keys = jax.random.split(jax.random.key(seed), 3)
@@ -108,7 +143,7 @@ def test_forward_uses_the_documented_entry_point(modules):
     """
     q, k, v = inputs()
     expected = jax.jit(modules["baseline"].causal_bhsd)(q, k, v)
-    assert cosine(jax.jit(modules["jaxbench"].kernel)(q, k, v), expected) > 0.9999
+    assert_matches(jax.jit(modules["jaxbench"].kernel)(q, k, v), expected)
     raw = jax.jit(modules["jaxbench"].flash_attention)(q, k, v)
     assert cosine(raw, expected) < 0.5, "the raw entry point should not match"
 
@@ -127,7 +162,7 @@ def test_backward_matches_the_reference_gradient(modules):
 
     for name, got, want in zip(("dq", "dk", "dv"), actual, expected):
         assert got.shape == want.shape, name
-        assert cosine(got, want) > 0.9999, name
+        assert_matches(got, want, name)
         a = np.asarray(got, np.float64)
         e = np.asarray(want, np.float64)
         rms_relative = float(
@@ -188,7 +223,7 @@ def test_tpu_inference_forward_matches_the_reference(modules):
             for key in keys
         )
         expected = jax.jit(modules["baseline"].causal_bhsd)(q, k, v)
-        assert cosine(jax.jit(tpu_inference.kernel)(q, k, v), expected) > 0.9999
+        assert_matches(jax.jit(tpu_inference.kernel)(q, k, v), expected)
 
     assert tpu_inference.SOURCE["launch_points"] == 1
     source = (FAMILY / "tpu_inference_optimized.py").read_text()
@@ -218,12 +253,12 @@ def test_tokamax_splash_backward_matches_the_reference(modules):
 
     single = tokamax.build_kernel(seq, block_q=128, block_kv=128)
     reference = modules["baseline"].splash_mha_hsd
-    assert cosine(jax.jit(single)(q, k, v), jax.jit(reference)(q, k, v)) > 0.9999
+    assert_matches(jax.jit(single)(q, k, v), jax.jit(reference)(q, k, v))
 
     expected = jax.jit(as_grad(reference))(q, k, v)
     actual = jax.jit(as_grad(single))(q, k, v)
     for name, got, want in zip(("dq", "dk", "dv"), actual, expected):
-        assert cosine(got, want) > 0.9999, name
+        assert_matches(got, want, name)
 
     hlo = jax.jit(as_grad(single)).lower(q, k, v).compile().as_text()
     pallas = sum(
@@ -255,12 +290,12 @@ def test_maxtext_tokamax_splash_backward_matches_the_reference(modules):
 
     single = maxtext.build_kernel(seq, block_q=128, block_kv=128)
     reference = modules["baseline"].splash_mha_hsd
-    assert cosine(jax.jit(single)(q, k, v), jax.jit(reference)(q, k, v)) > 0.9999
+    assert_matches(jax.jit(single)(q, k, v), jax.jit(reference)(q, k, v))
 
     expected = jax.jit(as_grad(reference))(q, k, v)
     actual = jax.jit(as_grad(single))(q, k, v)
     for name, got, want in zip(("dq", "dk", "dv"), actual, expected):
-        assert cosine(got, want) > 0.9999, name
+        assert_matches(got, want, name)
 
     hlo = jax.jit(as_grad(single)).lower(q, k, v).compile().as_text()
     pallas = sum(
@@ -283,7 +318,7 @@ def test_the_two_tokamax_lineage_splashes_agree(modules):
 
     a = jax.jit(tokamax.build_kernel(seq, block_q=128, block_kv=128))(q, k, v)
     b = jax.jit(maxtext.build_kernel(seq, block_q=128, block_kv=128))(q, k, v)
-    assert cosine(a, b) > 0.9999
+    assert_matches(a, b)
 
 
 def test_maxtext_copy_has_diverged_from_tokamax():
@@ -345,7 +380,7 @@ def test_pallasbench_dense_2d_matches_the_reference(modules):
     actual = jax.jit(pallasbench.kernel)(q, k, v)
     expected = jax.jit(baseline.dense_2d)(q, k, v)
     assert actual.shape == expected.shape == (512, 64)
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
 
 
 def test_pallasbench_is_not_causal(modules):

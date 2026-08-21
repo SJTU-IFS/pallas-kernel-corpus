@@ -60,6 +60,41 @@ def cosine(actual, expected) -> float:
     return float(a @ e / (np.linalg.norm(a) * np.linalg.norm(e) + 1e-12))
 
 
+def rms_relative(actual, expected) -> float:
+    """RMS error relative to the reference's own RMS magnitude."""
+    a = np.asarray(actual, np.float32).ravel()
+    e = np.asarray(expected, np.float32).ravel()
+    return float(np.sqrt(((a - e) ** 2).mean())
+                 / (np.sqrt((e ** 2).mean()) + 1e-12))
+
+
+def assert_matches(actual, expected, name: str = "", *,
+                   cos_bar: float = 0.9999, rms_bar: float = 2e-2) -> None:
+    """Direction *and* magnitude, because `cosine` alone checks only direction.
+
+    `cosine` is scale-invariant: an output multiplied by any constant -- 0.5,
+    2, a million -- still scores 1.0 against its reference and sails past a
+    0.9999 bar. A wrong dequantization scalar, fp8 scale or softmax
+    normalisation constant is exactly that kind of error, and it is a plausible
+    failure mode for these kernels, so direction alone is not evidence.
+
+    The RMS-relative bar is this corpus's own existing pattern, used in the
+    splash and flash backward tests and in gated linear attention. 2e-2 is the
+    value those chose. It is comfortably satisfied here: at the 0.9999 cosine
+    bar the angular term alone contributes sqrt(2*(1-0.9999)) = 1.4e-2, and the
+    cosines this suite actually records are 0.99997 or better, putting the
+    angular contribution at 7.7e-3 or less. What the bar catches is any scale
+    error above ~2%.
+    """
+    a = np.asarray(actual, np.float32)
+    e = np.asarray(expected, np.float32)
+    label = f"{name}: " if name else ""
+    similarity = cosine(a, e)
+    assert similarity > cos_bar, f"{label}cosine {similarity} <= {cos_bar}"
+    scale = rms_relative(a, e)
+    assert scale < rms_bar, f"{label}RMS-relative {scale} >= {rms_bar}"
+
+
 def build(modules, shape):
     num_tokens, num_seqs, n_kq, n_v = shape
     built = modules["baseline"].create_inputs(
@@ -98,8 +133,8 @@ def test_v1_matches_upstream_reference(modules, shape):
 
     assert got_out.shape == ref_out.shape
     assert got_state.shape == ref_state.shape
-    assert cosine(got_out, ref_out) > 0.9999
-    assert cosine(got_state, ref_state) > 0.9999
+    assert_matches(got_out, ref_out)
+    assert_matches(got_state, ref_state)
 
 
 def test_v1_reaches_pallas(modules):
@@ -135,7 +170,7 @@ def test_the_silu_precondition_is_real_and_matters(modules):
     )
 
     assert cosine(raw_out, ref_out) < 0.9, "raw input should be visibly wrong"
-    assert cosine(silu_out, ref_out) > 0.9999, "post-SiLU input should match"
+    assert_matches(silu_out, ref_out, "post-SiLU input should match")
     assert baseline.PRE_SILU_INPUT["baseline.ragged_gated_delta_rule"] is True
     assert (
         baseline.PRE_SILU_INPUT["tpu_inference_v1.ragged_gated_delta_rule"]
@@ -208,7 +243,7 @@ def test_v3_matches_tokamax_fused_reference(modules, v3_modules, implementation)
     assert len(actual_leaves) == len(expected_leaves)
     for got, want in zip(actual_leaves, expected_leaves):
         assert got.shape == want.shape
-        assert cosine(got, want) > 0.9999
+        assert_matches(got, want)
 
 
 @pytest.mark.parametrize("implementation", V3_IMPLEMENTATIONS)
@@ -297,7 +332,7 @@ def test_v2_decode_only_matches_reference(modules, v2_module):
         v2_module.ragged_gated_delta_rule_decode_only,
         static_argnames=tuple(static) + ("apply_silu",),
     )(*args, **static, apply_silu=True)
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
 
 
 def test_v2_apply_silu_flag_is_consistent(modules, v2_module):
@@ -317,7 +352,7 @@ def test_v2_apply_silu_flag_is_consistent(modules, v2_module):
         baseline.to_post_silu(built["mixed_qkv"]), *args[1:], **static,
         apply_silu=False,
     )
-    assert cosine(applied, pre) > 0.9999
+    assert_matches(applied, pre)
 
 
 @pytest.mark.parametrize("shape", [(256, 4, 64), (512, 4, 128)])
@@ -346,8 +381,8 @@ def test_v2_recurrent_scan_matches_reference(modules, v2_module, shape):
         use_qk_norm_in_gdn=True,
         has_initial_state=built["has_initial_state"],
     )
-    assert cosine(got, expected) > 0.9999
-    assert cosine(got_state, expected_state) > 0.9999
+    assert_matches(got, expected)
+    assert_matches(got_state, expected_state)
 
 
 def test_v2_recurrent_scan_silu_convention_differs_from_v1(modules, v2_module):
@@ -381,7 +416,7 @@ def test_v2_recurrent_scan_silu_convention_differs_from_v1(modules, v2_module):
     _, raw = fn(*args, **kwargs)
     _, double_silu = fn(baseline.to_post_silu(args[0]), *args[1:], **kwargs)
 
-    assert cosine(raw, expected) > 0.9999
+    assert_matches(raw, expected)
     assert cosine(double_silu, expected) < 0.99
     assert baseline.PRE_SILU_INPUT["tpu_inference_v2.recurrent_scan"] is True
     assert baseline.PRE_SILU_INPUT[
@@ -487,7 +522,7 @@ def test_triangle_solver_matches_linalg_inv(triangle_module, name):
         expected = jnp.linalg.inv(matrix)
         actual = triangle_call(triangle_module, name, matrix, n)
         assert actual.shape == expected.shape
-        assert cosine(actual, expected) > 0.9999
+        assert_matches(actual, expected)
         assert float(jnp.max(jnp.abs(actual - expected))) < 1e-5
 
 
@@ -527,7 +562,7 @@ def test_upstream_reference_agrees_with_the_oracle(triangle_module):
     """
     matrix = unit_lower_triangular(4, 64)
     reference = triangle_module.newton_schulz_inverse_ref(matrix, 64)
-    assert cosine(reference, jnp.linalg.inv(matrix)) > 0.9999
+    assert_matches(reference, jnp.linalg.inv(matrix))
 
 
 def test_triangle_solver_is_standalone(triangle_module):

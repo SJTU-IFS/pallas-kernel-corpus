@@ -320,7 +320,9 @@ def ragged_gated_delta_rule(
 
 
 # --- corpus additions ---------------------------------------------------
-# Everything above this line is upstream's file verbatim.
+# Everything above this line is upstream's file verbatim, except the import
+# block, which merges the imports of both references — the same wording the
+# sibling gated_linear_attention/baseline.py uses for the same situation.
 
 # ## The SiLU precondition -- identical signatures, different contracts
 #
@@ -444,7 +446,17 @@ def call(built: dict):
 # =======================================================================
 # Contract 2: fused_conv1d_gated_delta_rule
 # =======================================================================
-# Everything below is Tokamax's own pure-JAX reference, copied verbatim:
+# Everything below is Tokamax's own pure-JAX reference, copied verbatim,
+# except that its `_recurrent_gated_delta_rule_step` is renamed with a
+# `_tokamax_` prefix. Both repositories name that helper identically, so
+# concatenating them made the second definition shadow the first and the
+# tpu-inference reference above silently ran Tokamax's copy. The two are
+# alpha-equivalent at these pinned commits, so nothing computed differently
+# — but flatten_gdn.py records that this vendored pair shares 21 top-level
+# names with only about a third to a half AST-identical, so a re-pin could
+# have substituted a diverged helper without a word. flatten_gdn.py already
+# applies exactly this guard when it concatenates the v1 modules; baseline.py
+# never got it, because no tool assembles this file end to end.
 #
 #   repository: https://github.com/openxla/tokamax
 #   commit:     927e3f94e8ffe0430cf38bd1423112bb2f69ec66
@@ -490,7 +502,7 @@ def l2_normalize_ref(x: jnp.ndarray, eps: float = 1e-6) -> jnp.ndarray:
   return (x_f32 / norm).astype(x.dtype)
 
 
-def _recurrent_gated_delta_rule_step(
+def _tokamax_recurrent_gated_delta_rule_step(
     query: jnp.ndarray,
     key: jnp.ndarray,
     value: jnp.ndarray,
@@ -632,7 +644,7 @@ def ragged_gated_delta_rule_ref(
     query_reshaped = l2_normalize_ref(query_reshaped)
     key_reshaped = l2_normalize_ref(key_reshaped)
 
-    output, new_recurrent_state = _recurrent_gated_delta_rule_step(
+    output, new_recurrent_state = _tokamax_recurrent_gated_delta_rule_step(
         query_reshaped,
         key_reshaped,
         value_reshaped,
