@@ -145,9 +145,21 @@ def sglang_v2_inputs(baseline):
 
 
 def tolerances(expected):
-    """`(rtol, atol)` with the absolute term scaled to the reference's peak."""
+    """`(rtol, atol)` where peak-scaling may only ever *tighten* upstream's bar.
+
+    Upstream uses a flat `atol=2e-1`. That is vacuous where the output peaks
+    below it — the v2 case peaks at 0.096, so a kernel returning nothing but
+    zeros passed — which is why the absolute term is scaled by the reference's
+    magnitude here.
+
+    But scaling cuts both ways: two of these six comparisons have references
+    peaking at 62.25 and 11.06, where `ATOL * peak` would give 12.45 and 2.21 —
+    62x and 11x *looser* than upstream, and in both cases larger than the mean
+    output magnitude. Clamping to the minimum keeps the fix for small outputs
+    without ever relaxing a bar upstream already passes at.
+    """
     peak = float(np.max(np.abs(np.asarray(expected, np.float32))))
-    return RTOL, ATOL * max(peak, 1e-6)
+    return RTOL, ATOL * min(1.0, max(peak, 1e-6))
 
 
 def close(actual, expected, what):

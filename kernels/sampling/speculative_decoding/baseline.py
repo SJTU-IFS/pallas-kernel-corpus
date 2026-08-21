@@ -119,6 +119,8 @@ SOURCE = {
     "contracts": ("verify_tree_greedy", "build_eagle_tree_structure"),
 }
 
+import functools
+
 import jax
 import jax.numpy as jnp
 
@@ -178,6 +180,9 @@ def verify_tree_greedy_inputs():
     )
 
 
+@functools.partial(
+    jax.jit, static_argnames=["num_verify_tokens", "batch_size", "speculative_num_steps"]
+)
 def build_tree_kernel_efficient_preprocess(
     verified_id: jax.Array,
     scores: jax.Array,
@@ -187,7 +192,13 @@ def build_tree_kernel_efficient_preprocess(
     batch_size: int,
     speculative_num_steps: int,
 ):
-    """Upstream's own, from eagle_util.py -- unmodified.
+    """Upstream's own, from eagle_util.py.
+
+    Body unmodified; upstream's inline comments are dropped and this docstring
+    added. The `jax.jit` decorator is upstream's and is reproduced -- an earlier
+    version of this file omitted it while still calling itself "unmodified",
+    which is the same defect the corpus records and regression-tests for in the
+    MLA v2 flatten (see README, "layout_transpose").
 
     Turns the draft model's per-step scores and tokens into the
     `parent_list` / `selected_index` pair `build_eagle_tree_structure` takes.

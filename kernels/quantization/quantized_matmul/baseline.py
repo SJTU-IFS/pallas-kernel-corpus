@@ -29,6 +29,44 @@ kernel, so this reference is symmetric-only too.
 Neither reference uses Pallas.  Note in particular that sglang-jax's
 ``xla_quantized_matmul_local``, which looks like an XLA reference, dispatches
 *into* the block-wise Pallas kernel and is therefore not a valid baseline.
+
+WHERE THIS REFERENCE DEPARTS FROM UPSTREAM'S, AND WHY IT MATTERS
+---------------------------------------------------------------
+The paragraph above disqualifies ``xla_quantized_matmul_local``, and that is
+correct -- but it is not the only candidate, and an earlier version of this file
+read as though it were.  sglang-jax and tpu-inference each ship a genuine
+pure-JAX ``xla_quantized_matmul``:
+
+    pinned  sglang-jax    .../quantized_matmul_kernels/util.py:68
+    pinned  tpu-inference tpu_inference/layers/common/linear.py:29
+
+and this corpus already carries the first one verbatim, at
+``sglang_jax_optimized.py``.  So a carried upstream reference was available and
+this file went its own way regardless.
+
+That is a real weakness rather than a stylistic one, because the two disagree.
+Upstream's ``quantize_block`` **rounds** on the integer path
+(``jnp.clip(jnp.round(data / scale), ...)``); ``quantize_per_token`` below
+**truncates** (``(x * scale_inv).astype(x_q_dtype)``), and its own docstring
+says it "mirrors the kernels' ``quantize_array``" -- that is, it shares the
+quantizer of the thing it is supposed to be checking.  Measured on CPU at
+(128, 512) x (256, 512) int8:
+
+    quantized codes that differ                   49.8% of elements
+    cosine(this reference, upstream's)            0.9998809
+    cosine(this reference, exact float32)         0.9999116
+    cosine(upstream's reference, exact float32)   0.9999439
+
+Two things follow.  The references disagree by *more* than the 0.9999 bar the
+tests use, so they are not interchangeable; and upstream's sits closer to the
+exact float32 product, so it is the better oracle of the two.
+
+``upstream_quantize_tensor`` and ``upstream_quantized_matmul`` below are
+upstream's, carried verbatim, so the difference is inspectable rather than
+theoretical.  The kernel comparison in tests/test_quantized_matmul_tpu.py has
+deliberately NOT been switched to them: doing so changes what "correct" means
+for a kernel that truncates, and no TPU was available to confirm the kernel
+still passes.  That swap is recorded as a TPU action in EVALUATION.md.
 """
 
 from __future__ import annotations
@@ -193,6 +231,107 @@ def quantized_matmul_per_channel_xla(
 kernel = quantized_matmul_per_channel
 workload = quantized_matmul_per_channel
 
+
+
+# ---- carried verbatim from sglang-jax -------------------------------------
+# python/sgl_jax/srt/kernels/quantized_matmul/quantized_matmul_kernels/util.py
+# @ a7353325e8c00d287294c2cd679a77173f1a4594
+#
+# Upstream's own pure-JAX reference, plus the two helpers it needs. Renamed
+# with an `upstream_` prefix so a call site says which oracle it is using, and
+# so these do not collide with this file's own quantize_* helpers. Bodies are
+# unmodified.
+#
+# The difference that matters is in `upstream_quantize_block`: on the integer
+# path it applies `jnp.round` before the cast, where `quantize_per_token` above
+# truncates. See the module docstring for the measured consequence.
+
+def upstream_get_max_min(target_dtype):
+    if jnp.issubdtype(target_dtype, jnp.floating):
+        return jnp.finfo(target_dtype).max.astype(jnp.float32), jnp.finfo(target_dtype).min.astype(
+            jnp.float32
+        )
+    else:
+        return jnp.iinfo(target_dtype).max, jnp.iinfo(target_dtype).min
+
+
+def upstream_quantize_block(data, axis, target_dtype):
+    """Calculates scale and quantizes a block of data."""
+    abs_max = jnp.max(
+        jnp.abs(data),
+        axis=axis,
+        keepdims=True,
+    )
+    dtype_max, dtype_min = upstream_get_max_min(target_dtype)
+    scale = abs_max / dtype_max
+    scale = jnp.where(scale == 0, 1.0, scale)
+
+    if jnp.issubdtype(target_dtype, jnp.floating):
+        data_q = (data / scale).clip(dtype_min, dtype_max).astype(target_dtype)
+    else:
+        data_q = jnp.clip(jnp.round(data / scale), dtype_min, dtype_max).astype(target_dtype)
+    return data_q, scale
+
+
+def upstream_quantize_tensor(x: jax.Array, dtype: jnp.dtype, dim: int = -1, block_size: int | None = None):
+    if block_size is not None:
+        # Flatten all leading dims into a single batch dim for block
+        # quantization, then restore the original shape.
+        orig_shape = x.shape
+        k_dim = orig_shape[-1]
+        x_flat = x.reshape(-1, k_dim)
+        n_dim = x_flat.shape[0]
+        x_reshaped = x_flat.reshape(n_dim, -1, block_size)
+        x_q, scale = upstream_quantize_block(x_reshaped, axis=-1, target_dtype=dtype)
+
+        x_q = x_q.reshape(orig_shape)
+
+        return x_q, scale.transpose(1, 2, 0).astype(jnp.float32)
+    data_q, scale = upstream_quantize_block(x, axis=dim, target_dtype=dtype)
+    return data_q, scale.astype(jnp.float32)
+
+
+def upstream_xla_quantized_matmul(
+    x: jax.Array,
+    w_q: jax.Array,
+    w_scale: jax.Array,
+    quantize_activation=True,
+) -> jax.Array:
+    """
+    Reference (pure JAX) implementation of the quantized matmul kernel below.
+
+    Args:
+        x:  Activation.
+        w_q: Weight quantized array. [n_output_features, n_input_features]
+        w_s: Weight quantization scale. [n_output_features]
+        mesh: Mesh to shard on.
+        weight_sharding: PartitionSpec for the weight tensor.
+
+    Returns:
+        Output of the quantized matmul.
+    """
+    if quantize_activation:
+        acc_dtype = jnp.float32
+        if quantize_activation and jnp.issubdtype(w_q.dtype, jnp.integer):
+            acc_dtype = jnp.int32
+
+        x_q, x_scale = upstream_quantize_tensor(x, w_q.dtype)
+        out = jax.lax.dot_general(
+            x_q,
+            w_q,
+            dimension_numbers=(((1,), (1,)), ((), ())),
+            preferred_element_type=acc_dtype,
+        ).astype(jnp.float32)
+        out *= x_scale
+    else:
+        out = jax.lax.dot_general(
+            x,
+            w_q,
+            dimension_numbers=(((1,), (1,)), ((), ())),
+            preferred_element_type=jnp.float32,
+        )
+    out *= jnp.expand_dims(w_scale, 0)
+    return out.astype(x.dtype)
 
 def create_inputs(
     *,

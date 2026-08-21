@@ -66,6 +66,41 @@ def cosine(actual, expected) -> float:
     return float(a @ e / (np.linalg.norm(a) * np.linalg.norm(e) + 1e-12))
 
 
+def rms_relative(actual, expected) -> float:
+    """RMS error relative to the reference's own RMS magnitude."""
+    a = np.asarray(actual, np.float32).ravel()
+    e = np.asarray(expected, np.float32).ravel()
+    return float(np.sqrt(((a - e) ** 2).mean())
+                 / (np.sqrt((e ** 2).mean()) + 1e-12))
+
+
+def assert_matches(actual, expected, name: str = "", *,
+                   cos_bar: float = 0.9999, rms_bar: float = 2e-2) -> None:
+    """Direction *and* magnitude, because `cosine` alone checks only direction.
+
+    `cosine` is scale-invariant: an output multiplied by any constant -- 0.5,
+    2, a million -- still scores 1.0 against its reference and sails past a
+    0.9999 bar. A wrong dequantization scalar, fp8 scale or softmax
+    normalisation constant is exactly that kind of error, and it is a plausible
+    failure mode for these kernels, so direction alone is not evidence.
+
+    The RMS-relative bar is this corpus's own existing pattern, used in the
+    splash and flash backward tests and in gated linear attention. 2e-2 is the
+    value those chose. It is comfortably satisfied here: at the 0.9999 cosine
+    bar the angular term alone contributes sqrt(2*(1-0.9999)) = 1.4e-2, and the
+    cosines this suite actually records are 0.99997 or better, putting the
+    angular contribution at 7.7e-3 or less. What the bar catches is any scale
+    error above ~2%.
+    """
+    a = np.asarray(actual, np.float32)
+    e = np.asarray(expected, np.float32)
+    label = f"{name}: " if name else ""
+    similarity = cosine(a, e)
+    assert similarity > cos_bar, f"{label}cosine {similarity} <= {cos_bar}"
+    scale = rms_relative(a, e)
+    assert scale < rms_bar, f"{label}RMS-relative {scale} >= {rms_bar}"
+
+
 V2_IMPLEMENTATIONS = ("jaxbench", "tpu_inference")
 V3_IMPLEMENTATIONS = ("tpu_inference_v3", "sglang_jax")
 
@@ -117,7 +152,7 @@ def test_v2_matches_pure_jax_reference(modules, implementation, config):
     expected = jax.jit(baseline.rpa_v2)(*inputs)
     actual = jax.jit(modules[implementation].kernel)(*inputs)
     assert actual.shape == expected.shape
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
 
 
 @pytest.mark.parametrize("implementation", V2_IMPLEMENTATIONS)
@@ -137,7 +172,7 @@ def test_v2_handles_uneven_kv_lengths(modules, implementation):
     args = (q, kv_pages, kv_lens, page_indices, cu_q_lens, num_seqs)
     expected = jax.jit(baseline.rpa_v2)(*args)
     actual = jax.jit(modules[implementation].kernel)(*args)
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
 
 
 @pytest.mark.parametrize("implementation", V2_IMPLEMENTATIONS)
@@ -164,7 +199,7 @@ def test_v2_ignores_sequences_past_num_seqs(modules, implementation):
     expected = jax.jit(baseline.rpa_v2)(*args)
     actual = jax.jit(modules[implementation].kernel)(*args)
     rows = live * (q.shape[0] // kv_lens.shape[0])
-    assert cosine(actual[:rows], expected[:rows]) > 0.9999
+    assert_matches(actual[:rows], expected[:rows])
 
 
 V3_CONFIG = dict(
@@ -268,7 +303,7 @@ def test_v3_matches_tpu_inference_pure_jax_reference(modules, implementation):
         implementation, module, _v3_inputs(module.get_kv_cache_shape), scale
     )
     assert actual.shape == expected.shape
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
 
 
 def test_v3_reference_is_pallas_free(modules):
@@ -386,10 +421,10 @@ def test_hd64_matches_the_v3_reference(modules):
     expected = _hd64_call(v3, v3.ref_ragged_paged_attention)
     actual = _hd64_call(hd64, hd64.kernel)
     assert actual.shape == expected.shape
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
     # The general v3 kernel answers the same question at this shape, so it is a
     # second opinion on the reference rather than on hd64.
-    assert cosine(_hd64_call(v3, v3.kernel), expected) > 0.9999
+    assert_matches(_hd64_call(v3, v3.kernel), expected)
 
 
 def test_hd64_reaches_pallas_and_is_standalone():
@@ -479,7 +514,7 @@ def test_sglang_v2_matches_the_v3_reference(modules):
         )
     )
     assert actual.shape == expected.shape
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
 
 
 def test_sglang_v2_wants_a_4d_cache_not_its_own_helper_shape(modules):
@@ -557,7 +592,7 @@ def test_v3_cp_matches_its_own_reference():
     expected = _unwrap(cp.ref_ragged_paged_attention(*common))
     actual = _unwrap(cp.kernel(*common))
     assert actual.shape == expected.shape
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
 
 
 def test_v3_cp_contract_carries_the_sharding_arguments():
@@ -643,9 +678,9 @@ def test_hd64_reuses_a_populated_cache():
     expected = two_phase(v3, v3.ref_ragged_paged_attention)
     actual = two_phase(hd64, hd64.kernel)
     assert actual.shape == expected.shape
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
     # The general v3 kernel on the same workload, as a second opinion.
-    assert cosine(two_phase(v3, v3.kernel), expected) > 0.9999
+    assert_matches(two_phase(v3, v3.kernel), expected)
 
 
 # ---------------------------------------------------------------------------
@@ -734,7 +769,7 @@ def test_batched_matches_the_v3_reference(modules, brpa, page_size):
         prefill_block_sizes=_brpa_blocks(brpa),
     ))
     assert actual.shape == expected.shape
-    assert cosine(actual, expected) > 0.9999
+    assert_matches(actual, expected)
 
 
 def test_batched_layouts_agree_when_every_kv_token_is_new(modules, brpa):
@@ -762,7 +797,7 @@ def test_batched_layouts_agree_when_every_kv_token_is_new(modules, brpa):
             decode_block_sizes=_brpa_blocks(brpa),
             prefill_block_sizes=_brpa_blocks(brpa),
         ))
-        assert cosine(actual, expected) > 0.9999, layout
+        assert_matches(actual, expected, layout)
 
 
 def test_batched_seq_along_lane_requires_page_size_128(brpa):

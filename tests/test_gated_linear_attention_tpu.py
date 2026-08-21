@@ -59,6 +59,41 @@ def cosine(actual, expected) -> float:
     return float(a @ e / (np.linalg.norm(a) * np.linalg.norm(e) + 1e-12))
 
 
+def rms_relative(actual, expected) -> float:
+    """RMS error relative to the reference's own RMS magnitude."""
+    a = np.asarray(actual, np.float32).ravel()
+    e = np.asarray(expected, np.float32).ravel()
+    return float(np.sqrt(((a - e) ** 2).mean())
+                 / (np.sqrt((e ** 2).mean()) + 1e-12))
+
+
+def assert_matches(actual, expected, name: str = "", *,
+                   cos_bar: float = 0.9999, rms_bar: float = 2e-2) -> None:
+    """Direction *and* magnitude, because `cosine` alone checks only direction.
+
+    `cosine` is scale-invariant: an output multiplied by any constant -- 0.5,
+    2, a million -- still scores 1.0 against its reference and sails past a
+    0.9999 bar. A wrong dequantization scalar, fp8 scale or softmax
+    normalisation constant is exactly that kind of error, and it is a plausible
+    failure mode for these kernels, so direction alone is not evidence.
+
+    The RMS-relative bar is this corpus's own existing pattern, used in the
+    splash and flash backward tests and in gated linear attention. 2e-2 is the
+    value those chose. It is comfortably satisfied here: at the 0.9999 cosine
+    bar the angular term alone contributes sqrt(2*(1-0.9999)) = 1.4e-2, and the
+    cosines this suite actually records are 0.99997 or better, putting the
+    angular contribution at 7.7e-3 or less. What the bar catches is any scale
+    error above ~2%.
+    """
+    a = np.asarray(actual, np.float32)
+    e = np.asarray(expected, np.float32)
+    label = f"{name}: " if name else ""
+    similarity = cosine(a, e)
+    assert similarity > cos_bar, f"{label}cosine {similarity} <= {cos_bar}"
+    scale = rms_relative(a, e)
+    assert scale < rms_bar, f"{label}RMS-relative {scale} >= {rms_bar}"
+
+
 def kda_inputs(seq_len, batch=1, heads=4, k_dim=64, v_dim=64, seed=0):
     """A **contracting** KDA recurrence.
 
@@ -103,7 +138,7 @@ def test_kda_matches_upstream_reference(modules, seq_len):
         )
     )
     assert leaves[0].shape == expected.shape
-    assert cosine(leaves[0], expected) > 0.9999
+    assert_matches(leaves[0], expected)
     rms_relative = float(
         np.sqrt(((np.asarray(leaves[0], np.float64)
                   - np.asarray(expected, np.float64)) ** 2).mean())
@@ -113,7 +148,7 @@ def test_kda_matches_upstream_reference(modules, seq_len):
 
     for leaf in leaves[1:]:
         if hasattr(leaf, "shape") and leaf.shape == expected_state.shape:
-            assert cosine(leaf, expected_state) > 0.9999
+            assert_matches(leaf, expected_state)
             break
     else:
         pytest.fail("no output leaf matched the reference final state shape")
@@ -196,8 +231,8 @@ def test_simple_gla_prefill_matches_upstream_reference(modules):
         built["g_gamma"], built["h0"], built["cu_seqlens"], None,
     )
     assert output.shape == expected.shape
-    assert cosine(output, expected) > 0.9999
-    assert cosine(final_state, expected_state) > 0.9999
+    assert_matches(output, expected)
+    assert_matches(final_state, expected_state)
 
 
 def test_simple_gla_decode_matches_upstream_reference(modules):
@@ -224,8 +259,8 @@ def test_simple_gla_decode_matches_upstream_reference(modules):
     expected, expected_state = modules["baseline"].naive_gla_decode(
         q[:, None], k[:, None], v[:, None], built["g_gamma"], reference_h0, None,
     )
-    assert cosine(output, expected) > 0.9999
-    assert cosine(new_buffer[indices], expected_state) > 0.9999
+    assert_matches(output, expected)
+    assert_matches(new_buffer[indices], expected_state)
 
 
 def test_simple_gla_rejects_the_conventions_that_do_not_apply(modules):

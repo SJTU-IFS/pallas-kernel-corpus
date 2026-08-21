@@ -37,6 +37,8 @@ SOURCE = {
     "contract": "rpa_v3",
 }
 
+import logging
+
 
 # ---- extracted from sgl_jax/srt/utils/jax_utils.py: get_device_name ----
 
