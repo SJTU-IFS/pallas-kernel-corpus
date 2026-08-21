@@ -247,7 +247,8 @@ That machine is gone, so the state is recorded here rather than implied.
 | Full suite, end to end | Last confirmed green at **433 passed, 1 skipped**, before the `fused_moe` tolerance fix and before `speculative_decoding` and `paged_attention` were added |
 | `tools/launch_coverage.py` | Last run before those same three changes |
 | `tools/assertion_strength.py` | Last complete run recorded 311 comparisons, all clean, before those same three changes |
-| Non-TPU suite | **48 passed, 442 skipped** on a fresh clone; **60 passed, 430 skipped** with the pinned trees present, which enables the regeneration-and-diff tests. See *Run* for how to build a CPU environment |
+| Non-TPU suite | **100 passed, 443 skipped** on a fresh clone; **112 passed, 431 skipped** with the pinned trees present, which enables the regeneration-and-diff tests. See *Run* for how to build a CPU environment |
+| CPU interpret coverage | **48 kernels executed** against their references without a TPU, via `tests/test_cpu_interpret.py`. Not a Mosaic lowering, so it does not make anything *migrated* — see below |
 | Launch-point audit | **Reproduces exactly** from freshly cloned pinned trees: 181 launch points, 156 TPU-compatible, 25 GPU, 151 source files, 40 families |
 
 The three changes not covered by a full-suite run are each covered by their own
@@ -276,18 +277,42 @@ uv pip install --python .venv-cpu "jax==0.10.2" "numpy==2.3.5" "ml-dtypes==0.5.4
 .venv-cpu/bin/python -m pytest tests/ -q
 ```
 
-On a fresh clone that yields **48 passed, 442 skipped**: the ledger checks, the
-flatten-tool tests, the quantized-matmul reference comparison, and the two
-prepared families the Pallas interpreter can reach. The skips are the TPU-gated
-kernels.
+On a fresh clone that yields **100 passed, 443 skipped**: the ledger checks, the
+flatten-tool tests, the quantized-matmul reference comparison, and — the bulk of
+it — 48 kernels actually executed under the Pallas interpreter. The skips are
+the TPU-gated tests.
 
 Twelve more tests — the regeneration-and-diff suite, which is what enforces
 the claim that every kernel file still reproduces from its recorded commit —
 need the pinned upstream trees. Those are deliberately not vendored (~210 MB
 across six repositories). Clone each at the commit named in
 `THIRD_PARTY_NOTICES.md` into a `pinned/` directory beside this one, or point
-`PINNED_CHECKOUTS` at wherever you put them, and the count becomes **60 passed,
-430 skipped**.
+`PINNED_CHECKOUTS` at wherever you put them, and the count becomes **112 passed,
+431 skipped**.
+
+### What runs without a TPU, and what that is worth
+
+`pl.pallas_call(..., interpret=True)` executes a kernel body in plain JAX on any
+backend. `tests/test_cpu_interpret.py` uses it to run 48 kernels — all 43
+PallasBench tasks, two flash-attention implementations and three grouped
+matmuls — against the same references the TPU tests use.
+
+It is a real check. It runs the actual kernel body on actual inputs and catches
+logic errors, indexing mistakes and bad flattening; it is how the two prepared
+families were validated before any hardware saw them, and it is upstream's own
+practice where upstream has an opinion — MaxText ships a `RaggedAttentionCpuTest`
+beside its `tpu_only` tests.
+
+It is also **not a Mosaic lowering**, and passing it does not make a kernel
+migrated. `inventory.json` is untouched by it. The rule that nothing counts as
+validated without a TPU run is what kept this ledger honest when the TPU host
+died mid-run, and interpret mode does not relax it.
+
+Its reach is bounded by construction: the interpreter cannot emulate DMA,
+semaphores, `emit_pipeline`, `core_map` or explicit memory spaces, which puts
+**62 of the 136 migrated launch points** within reach and the rest permanently
+outside it. A test in that file recomputes the 62 and fails if it drifts, so
+this paragraph cannot go stale silently.
 
 Two caveats hold regardless of hardware. Expert-parallel and tensor-parallel
 kernels — `fused_moe`, `gated_mlp`, and anything ending in a collective — were
