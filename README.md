@@ -82,7 +82,7 @@ These counts are deliberately kept apart, because they are not interchangeable:
 | TPU launch points audited (migration *candidates*) | 156 |
 | **TPU launch points migrated and validated** | **136** |
 | Semantic families with any migration | 34 of 40 |
-| Corpus directories | 34 |
+| Corpus directories | 38 |
 
 156 is an inventory of what exists upstream. 136 launch points have been made
 standalone and checked for correctness on TPU; 39 of those are also profiled.
@@ -114,12 +114,13 @@ Tokamax), and **cross entropy** (Tokamax's
 point is open**: the only unmigrated ones are the v1 `tgmm`s, deliberately
 deferred on qwix.
 
-**No family the corpus has started has open work left** — all 34. In each,
-every audited TPU launch point is either migrated and validated, or recorded
-with evidence as a duplicate, a deliberate deferral, a kernel that does not do
-what its name suggests, or — new with `speculative_decoding` — a kernel that
-**does not run upstream either**. **All 5 remaining open launch points are in
-the 6 families the corpus has not touched.**
+**Nothing is open.** All 156 audited TPU launch points are accounted for: 136
+migrated and validated, 5 **prepared**, 11 excluded with evidence, 4 deliberately
+deferred on qwix. "Prepared" is a status this repository added when its TPU went
+away — the kernel is flattened, self-contained, provenance-recorded and carried
+here with a reference and tests, but it has not been run on a TPU, so it is not
+counted as migrated. The corpus's standing rule is that nothing becomes migrated
+without a TPU run, and a week without hardware is not a reason to weaken it.
 
 The TPU-compatible total was **157 until `paged_attention` was migrated**, and
 the correction is worth naming: sglang-jax's paged attention is a GPU kernel
@@ -230,25 +231,23 @@ forward, a backward-dQ, and a backward-dKV launch.
 
 ## Verification status
 
-Every kernel counted in `inventory.json` was validated on a **TPU v6e-1**, and
+Every kernel *counted* in `inventory.json` was validated on a **TPU v6e-1**, and
 each family's own test file passed on that machine at the time it was added.
-That machine is no longer available, which changes what this repository can
-claim, so the state is recorded here rather than implied:
+That machine is gone, so the state is recorded here rather than implied.
 
 | Check | Status |
 |---|---|
-| Per-family test files | Each passed on TPU when its family was added, including the two most recent (`speculative_decoding`, `paged_attention`) |
+| Per-family TPU test files | Each passed on TPU when its family was added |
 | Full suite, end to end | Last confirmed green at **433 passed, 1 skipped**, before the `fused_moe` tolerance fix and before `speculative_decoding` and `paged_attention` were added |
 | `tools/launch_coverage.py` | Last run before those same three changes |
 | `tools/assertion_strength.py` | Last complete run recorded 311 comparisons, all clean, before those same three changes |
+| Non-TPU suite | **44 passed, 431 skipped** on CPU — the ledger checks, the flatten-tool tests, and the two prepared families that interpret mode can reach |
+| Launch-point audit | **Reproduces exactly** from freshly cloned pinned trees: 181 launch points, 156 TPU-compatible, 25 GPU, 151 source files, 40 families |
 
 The three changes not covered by a full-suite run are each covered by their own
-file, which did pass: the `fused_moe` tolerance fix (11 passed), the
-`speculative_decoding` family, and `paged_attention` (6 passed). What is missing
-is the *regression* evidence that they did not disturb anything else, plus a
-final pass of the two audit tools. The host became unreachable mid-run, and I
-have not re-run them since; nothing here is asserted as green that was not
-observed to be green.
+file, which did pass. What is missing is the *regression* evidence that they did
+not disturb anything else, plus a final pass of the two audit tools. Nothing here
+is asserted as green that was not observed to be green.
 
 Anyone with a TPU can close that gap:
 
@@ -259,12 +258,58 @@ uv run --frozen --with pytest python tools/launch_coverage.py
 uv run --frozen --with pytest python tools/assertion_strength.py
 ```
 
-Two further caveats hold regardless of hardware. Expert-parallel and
-tensor-parallel kernels — `fused_moe`, `gated_mlp`, and anything ending in a
-collective — were validated at **one device**, where the collective degenerates
-to the identity; the surrounding fusion is exercised, the cross-device reduction
-is not. And `collective_matmul` was never started, so its two launch points are
-neither migrated nor assessed.
+Without a TPU you can still run a useful subset, on any machine — this needs
+only CPU JAX, not the pinned `jax[tpu]`:
+
+```bash
+pytest tests/ -q          # ledger + flatten tools + the CPU-interpretable kernels
+```
+
+Two caveats hold regardless of hardware. Expert-parallel and tensor-parallel
+kernels — `fused_moe`, `gated_mlp`, and anything ending in a collective — were
+validated at **one device**, where the collective degenerates to the identity;
+the surrounding fusion is exercised, the cross-device reduction is not. And the
+two kernels in `collective_matmul` have never been executed at all, for the
+reasons given above.
+
+## The five prepared launch points
+
+Two of them are checked as far as anything can be without TPU hardware:
+
+| Kernel | Status without a TPU |
+|---|---|
+| MaxText `ragged_attention` | All three entry points match upstream's own references to **~1e-7** under CPU interpret mode |
+| tpu-inference `spmm` | All eight sparsity arrangements match `jnp.dot` **exactly** under CPU interpret mode |
+| tpu-inference `causal_conv1d` | Not checkable — eight explicit DMAs and a semaphore, which the interpreter does not emulate |
+| tpu-inference `all_gather_matmul` | Not checkable **on any hardware this project had** |
+| tpu-inference `hierarchical_reduce_scatter` | Not checkable **on any hardware this project had** |
+
+CPU interpret mode runs the same Pallas program through an interpreter rather
+than lowering it to Mosaic. It catches flattening mistakes and logic errors —
+which is why it is worth doing — and it is upstream's own practice for the
+MaxText kernel, which ships a `RaggedAttentionCpuTest` beside its `tpu_only`
+tests. It is not a substitute for the real thing, and the ledger does not treat
+it as one.
+
+The last two are a different category, and the distinction matters more than the
+word "prepared" suggests. `all_gather_matmul` indexes a communication ring with
+`lax.axis_index` and exchanges shards with its left and right neighbours over 14
+send/recv semaphores; upstream's own test opens `if jax.device_count() != 8:
+skipTest`. The hierarchical reduce-scatter runs on SparseCore and pipelines
+Die-to-Die against Chip-to-Chip ICI, with devices ordered by physical topology.
+This corpus was built on a **v6e-1** — one chip, one device — where that ring has
+no neighbours. **No amount of TPU time on that machine would have validated
+either.** They are carried with full provenance and the hardware requirement
+recorded, rather than left out or left looking like unfinished work.
+
+One flattening detail is worth repeating here because it nearly went wrong: in
+the `hierrs_sc` modules, `config.num_chips` and its 75 siblings are attribute
+access on a **`Config` instance**, not a module qualifier — the imports are `from
+…config import Config`. Stripping `config.` as a prefix, the way a naive flatten
+would, corrupts every one of them into a silent misread. This corpus has been
+bitten by exactly that before, which is why the scope-aware pass exists and why
+these modules declare no prefixes to strip at all.
+
 
 ## Run
 
@@ -281,6 +326,9 @@ Interpret mode is only a convenience for generic Pallas kernels that support
 it. Mosaic TPU kernels must be executed on a TPU.
 
 ## Migrated so far
+
+Rows in *italics* are **prepared**, not migrated: carried with provenance and
+tests, but not yet validated on a TPU, and so not counted in the 136.
 
 | Corpus directory | Source | Contract | Roles migrated | Roles audited but not migrated |
 |---|---|---|---|---|
@@ -342,6 +390,11 @@ it. Mosaic TPU kernels must be executed on a TPU.
 | `kernels/state_space/gated_linear_attention` | sglang-jax | `simple_gla_fwd` | forward (3 launches) | — |
 | `kernels/attention/multi_head_attention` | PallasBench | `multi_head_attention` | forward (1) | — |
 | `kernels/attention/paged_attention` | JAXBench | `paged_attention_decode` | forward | — (sglang-jax's is a GPU kernel) |
+| `kernels/attention/ragged_mqa_attention` | MaxText | `ragged_attention` | *prepared* | CPU-checked, awaiting TPU |
+| `kernels/matmul/structured_sparse_matmul` | vLLM tpu-inference | `structured_sparse_matmul` | *prepared* | CPU-checked, awaiting TPU |
+| `kernels/convolution/causal_conv1d` | vLLM tpu-inference | `ragged_causal_conv1d` | *prepared* | DMA-based; not CPU-checkable |
+| `kernels/collectives/collective_matmul` | vLLM tpu-inference | `all_gather_matmul` | *prepared* | needs 8 devices |
+| `kernels/collectives/collective_matmul` | vLLM tpu-inference | `hierarchical_reduce_scatter` | *prepared* | needs multi-chip |
 | `kernels/attention/qk_softmax` | PallasBench | `qk_softmax` | forward (1) | — |
 | `kernels/elementwise/activation` | PallasBench | `gelu`, `relu`, `sigmoid`, `silu`, `tanh` | forward (5) | — |
 | `kernels/elementwise/elementwise_binary` | PallasBench | `add`, `multiply` | forward (2) | — |
