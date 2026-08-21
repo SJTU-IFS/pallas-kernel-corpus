@@ -247,7 +247,7 @@ That machine is gone, so the state is recorded here rather than implied.
 | Full suite, end to end | Last confirmed green at **433 passed, 1 skipped**, before the `fused_moe` tolerance fix and before `speculative_decoding` and `paged_attention` were added |
 | `tools/launch_coverage.py` | Last run before those same three changes |
 | `tools/assertion_strength.py` | Last complete run recorded 311 comparisons, all clean, before those same three changes |
-| Non-TPU suite | **44 passed, 431 skipped** on CPU — the ledger checks, the flatten-tool tests, and the two prepared families that interpret mode can reach |
+| Non-TPU suite | **48 passed, 442 skipped** on a fresh clone; **60 passed, 430 skipped** with the pinned trees present, which enables the regeneration-and-diff tests. See *Run* for how to build a CPU environment |
 | Launch-point audit | **Reproduces exactly** from freshly cloned pinned trees: 181 launch points, 156 TPU-compatible, 25 GPU, 151 source files, 40 families |
 
 The three changes not covered by a full-suite run are each covered by their own
@@ -264,12 +264,30 @@ uv run --frozen --with pytest python tools/launch_coverage.py
 uv run --frozen --with pytest python tools/assertion_strength.py
 ```
 
-Without a TPU you can still run a useful subset, on any machine — this needs
-only CPU JAX, not the pinned `jax[tpu]`:
+Without a TPU you can still run a useful subset, on any machine. Note that
+`uv sync` will **not** work there: this project pins `jax[tpu]` and `libtpu`,
+and `libtpu` publishes only `manylinux_x86_64` wheels, so resolution fails on
+macOS or any non-TPU host. Build a separate CPU environment instead — the same
+JAX version, without the TPU plugin — and leave `pyproject.toml` alone:
 
 ```bash
-pytest tests/ -q          # ledger + flatten tools + the CPU-interpretable kernels
+uv venv --python 3.12 .venv-cpu
+uv pip install --python .venv-cpu "jax==0.10.2" "numpy==2.3.5" "ml-dtypes==0.5.4" pytest
+.venv-cpu/bin/python -m pytest tests/ -q
 ```
+
+On a fresh clone that yields **48 passed, 442 skipped**: the ledger checks, the
+flatten-tool tests, the quantized-matmul reference comparison, and the two
+prepared families the Pallas interpreter can reach. The skips are the TPU-gated
+kernels.
+
+Twelve more tests — the regeneration-and-diff suite, which is what enforces
+the claim that every kernel file still reproduces from its recorded commit —
+need the pinned upstream trees. Those are deliberately not vendored (~210 MB
+across six repositories). Clone each at the commit named in
+`THIRD_PARTY_NOTICES.md` into a `pinned/` directory beside this one, or point
+`PINNED_CHECKOUTS` at wherever you put them, and the count becomes **60 passed,
+430 skipped**.
 
 Two caveats hold regardless of hardware. Expert-parallel and tensor-parallel
 kernels — `fused_moe`, `gated_mlp`, and anything ending in a collective — were

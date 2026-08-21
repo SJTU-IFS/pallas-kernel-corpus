@@ -180,13 +180,32 @@ def test_inventory_corpus_claims_match_the_filesystem():
             assert result["correctness"]["status"] == implementation["correctness"]
 
 
+def pinned_root() -> Path | None:
+    """Where the pinned upstream trees live, if they are present.
+
+    Two ways, same as tests/test_regenerates_from_pinned.py: the
+    `PINNED_CHECKOUTS` environment variable, or a `pinned/` directory beside
+    this repository. Keeping one convention matters — with two, the suite's
+    pass count silently depended on which one you happened to use.
+    """
+    candidates = []
+    if os.environ.get("PINNED_CHECKOUTS"):
+        candidates.append(Path(os.environ["PINNED_CHECKOUTS"]))
+    candidates.append(ROOT.parent / "pinned")
+    for candidate in candidates:
+        if candidate.is_dir() and (candidate / "PallasBench").is_dir():
+            return candidate
+    return None
+
+
 @pytest.mark.skipif(
-    not os.environ.get("PINNED_CHECKOUTS"),
-    reason="set PINNED_CHECKOUTS to the directory holding the pinned upstream trees",
+    pinned_root() is None,
+    reason="pinned upstream trees not present; set PINNED_CHECKOUTS or place "
+           "them in a `pinned/` directory beside this repository",
 )
 def test_source_paths_exist_in_pinned_checkouts():
     """Verify provenance against the real pinned trees when they are available."""
-    checkouts = Path(os.environ["PINNED_CHECKOUTS"])
+    checkouts = pinned_root()
     scopes = {
         "https://github.com/AI-Hypercomputer/accelerator-agents": "accelerator-agents",
         "https://github.com/Tyronita/PallasBench": "PallasBench",
