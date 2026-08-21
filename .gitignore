@@ -17,3 +17,8 @@ __pycache__/
 # Profiling traces are large and regenerated per run; the summarised
 # result.json and report.md beside them are what this corpus keeps.
 profiles/**/trace/
+
+# Audit output: regenerable from the pinned trees, and inventory.json
+# already embeds its launch_points.
+lp.json
+launch_points.json

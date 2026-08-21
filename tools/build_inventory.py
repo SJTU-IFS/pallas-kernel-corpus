@@ -2041,6 +2041,217 @@ CORPUS_DIRECTORIES: dict[str, dict] = {
             },
         },
     },
+    "kernels/attention/ragged_mqa_attention": {
+        "baseline": "baseline.py",
+        "semantic_contracts": {
+            "ragged_attention": (
+                "decode attention where each sequence attends only over its "
+                "own prefix, given by `lengths`; whole blocks past that prefix "
+                "are skipped rather than masked. Returns (out, logits_max, "
+                "denominator) so callers can combine partial results"
+            ),
+        },
+        "implementations": {
+            "maxtext": {
+                "file": "maxtext_optimized.py",
+                "repository": "MaxText",
+                "upstream_path": "attention/ragged_attention.py",
+                "family": "ragged_mqa_attention",
+                "contract": "ragged_attention",
+                "entry_points": ["ragged_mqa", "ragged_mha", "ragged_gqa", "kernel"],
+                "migrated_launch_points": 0,
+                "audited_launch_points": 1,
+                "migrated_roles": [],
+                "unmigrated_roles": ["forward"],
+                "standalone": True,
+                "correctness": "UNVALIDATED",
+                "native_shape": None,
+                "profile": None,
+                "notes": (
+                    "PREPARED, NOT MIGRATED: validated on CPU but not yet on a "
+                    "TPU. One repo-local name resolved (DEFAULT_MASK_VALUE, a "
+                    "float constant, inlined with its defining expression), "
+                    "and upstream's three reference_* functions moved from the "
+                    "kernel file to baseline.py. One pallas_call serves three "
+                    "entry points -- ragged_mqa/mha/gqa differ in how they "
+                    "reshape and vmap around it -- so this is one launch "
+                    "point, pinned by a test. All three match upstream's own "
+                    "references to ~1e-7 under interpret mode on CPU, which is "
+                    "upstream's own practice: MaxText ships a "
+                    "RaggedAttentionCpuTest beside its tpu_only tests. That is "
+                    "not a Mosaic lowering, so it does not count as migrated. "
+                    "Careful: the kernel and the references take DIFFERENT "
+                    "layouts -- ragged_gqa wants k/v as [B,S,KV,D] while "
+                    "reference_gqa wants [B,KV,S,D] and a squeezed q -- and "
+                    "mha/gqa return an unnormalised output the caller must "
+                    "divide by the returned denominator"
+                ),
+            },
+        },
+    },
+    "kernels/matmul/structured_sparse_matmul": {
+        "baseline": "baseline.py",
+        "semantic_contracts": {
+            "structured_sparse_matmul": (
+                "N:M structured sparse matmul: the kernel never sees a dense "
+                "matrix, only the compressed (nonzeros, metadata) pair that "
+                "Sparsifier produces, and must equal the dense product of the "
+                "same matrices with pruned entries set to default_value"
+            ),
+        },
+        "implementations": {
+            "tpu_inference": {
+                "file": "tpu_inference_optimized.py",
+                "repository": "tpu-inference",
+                "upstream_path": "structured_sparse_matmul/v1/spmm.py",
+                "family": "structured_sparse_matmul",
+                "contract": "structured_sparse_matmul",
+                "entry_points": ["structured_spmm", "_structured_spmm",
+                                 "Sparsifier", "gen_sparse_mask", "kernel"],
+                "migrated_launch_points": 0,
+                "audited_launch_points": 1,
+                "migrated_roles": [],
+                "unmigrated_roles": ["forward"],
+                "standalone": True,
+                "correctness": "UNVALIDATED",
+                "native_shape": None,
+                "profile": None,
+                "notes": (
+                    "PREPARED, NOT MIGRATED: validated on CPU but not yet on a "
+                    "TPU. The most self-contained file in the corpus -- zero "
+                    "repo-local imports, carried verbatim. All eight sparsity "
+                    "arrangements (either operand sparse, sparsity along the "
+                    "contracting or free dimension, rhs transposed or not) "
+                    "match jnp.dot on the densified operands EXACTLY under "
+                    "interpret mode on CPU at 2:4 bf16. jnp.dot is upstream's "
+                    "own choice of reference in spmm_v1_test.py and is a plain "
+                    "identity. Sparsifier and gen_sparse_mask stay in the "
+                    "kernel file rather than the baseline: they are part of "
+                    "how the kernel is CALLED, not what it is checked against. "
+                    "A test guards the premise that the compression actually "
+                    "drops half the elements, since a no-op Sparsifier would "
+                    "leave every comparison passing while checking nothing"
+                ),
+            },
+        },
+    },
+    "kernels/convolution/causal_conv1d": {
+        "baseline": "baseline.py",
+        "semantic_contracts": {
+            "ragged_causal_conv1d": (
+                "depthwise causal convolution over many packed sequences of "
+                "different lengths; each token sees its own sequence's history "
+                "plus the kernel_size-1 carried in conv_state, and never its "
+                "neighbour's"
+            ),
+        },
+        "implementations": {
+            "tpu_inference": {
+                "file": "tpu_inference_optimized.py",
+                "repository": "tpu-inference",
+                "upstream_path": "causal_conv1d/causal_conv1d.py",
+                "family": "causal_conv1d",
+                "contract": "ragged_causal_conv1d",
+                "entry_points": ["ragged_causal_conv1d", "kernel"],
+                "migrated_launch_points": 0,
+                "audited_launch_points": 1,
+                "migrated_roles": [],
+                "unmigrated_roles": ["forward"],
+                "standalone": True,
+                "correctness": "UNVALIDATED",
+                "native_shape": None,
+                "profile": None,
+                "notes": (
+                    "PREPARED, NOT MIGRATED, and NOT checkable on CPU: the "
+                    "kernel uses eight explicit DMAs and a semaphore, which "
+                    "the Pallas interpreter does not emulate, so unlike the "
+                    "other prepared families this one has had no correctness "
+                    "check at all yet. One repo-local import resolved: "
+                    "strided_ldst inlined whole (its two functions only make "
+                    "sense read together). The reference is upstream's "
+                    "reference_causal_conv1d, which lives in its TEST file "
+                    "rather than beside the kernel and is EAGER-ONLY -- it "
+                    "calls int() on distribution and query_start_loc entries, "
+                    "so it does not survive jax.jit. Upstream's tolerance is "
+                    "rtol = atol = 1e-2"
+                ),
+            },
+        },
+    },
+    "kernels/collectives/collective_matmul": {
+        "baseline": "baseline.py",
+        "semantic_contracts": {
+            "all_gather_matmul": (
+                "a ring all-gather fused into a matmul: each device multiplies "
+                "the shard it holds while the next is still in flight, so the "
+                "communication hides under MXU work instead of preceding it"
+            ),
+            "hierarchical_reduce_scatter": (
+                "reduce-scatter by recursive halving on SparseCore rather than "
+                "the TensorCore, two-stage pipelined to overlap Die-to-Die and "
+                "Chip-to-Chip ICI with local adds"
+            ),
+        },
+        "implementations": {
+            "tpu_inference_all_gather_matmul": {
+                "file": "tpu_inference_all_gather_matmul_optimized.py",
+                "repository": "tpu-inference",
+                "upstream_path": "collectives/all_gather_matmul.py",
+                "family": "collective_matmul",
+                "contract": "all_gather_matmul",
+                "entry_points": ["all_gather_matmul", "_all_gather_matmul_call",
+                                 "kernel"],
+                "migrated_launch_points": 0,
+                "audited_launch_points": 1,
+                "migrated_roles": [],
+                "unmigrated_roles": ["forward"],
+                "standalone": True,
+                "correctness": "UNVALIDATED",
+                "native_shape": None,
+                "profile": None,
+                "notes": (
+                    "PREPARED; NOT VALIDATABLE ON THIS CORPUS'S HARDWARE. "
+                    "Requires EXACTLY 8 DEVICES -- upstream's own test opens "
+                    "`if jax.device_count() != 8: skipTest`. The kernel indexes "
+                    "a ring with lax.axis_index and exchanges shards with its "
+                    "left and right neighbours over 14 send/recv semaphores; on "
+                    "the v6e-1 this corpus used, that ring has no neighbours. "
+                    "This is a hardware requirement, not unfinished work: no "
+                    "amount of single-device TPU time would close it. Two "
+                    "modules inlined (util.py, the tuned block-size table); "
+                    "their module qualifiers were dropped with the scope-aware "
+                    "pass rather than a blind regex"
+                ),
+            },
+            "tpu_inference_hierarchical_reduce_scatter": {
+                "file": "tpu_inference_hierarchical_reduce_scatter_optimized.py",
+                "repository": "tpu-inference",
+                "upstream_path": "collectives/hierrs_sc/wrapper.py",
+                "family": "collective_matmul",
+                "contract": "hierarchical_reduce_scatter",
+                "entry_points": ["hierarchical_reduce_scatter_local", "kernel"],
+                "migrated_launch_points": 0,
+                "audited_launch_points": 1,
+                "migrated_roles": [],
+                "unmigrated_roles": ["forward"],
+                "standalone": True,
+                "correctness": "UNVALIDATED",
+                "native_shape": None,
+                "profile": None,
+                "notes": (
+                    "PREPARED; NOT VALIDATABLE ON THIS CORPUS'S HARDWARE. "
+                    "Requires a MULTI-CHIP topology: it runs on SparseCore and "
+                    "pipelines Die-to-Die against Chip-to-Chip ICI, with "
+                    "devices ordered by physical topology coordinates. Five "
+                    "modules flattened in dependency order (config, topology, "
+                    "dma_pipeline, kernel, wrapper). NOTE for anyone editing "
+                    "the flatten: `config.` in these files is attribute access "
+                    "on a Config INSTANCE, not a module qualifier -- stripping "
+                    "it as a prefix would silently corrupt 76 reads"
+                ),
+            },
+        },
+    },
     "kernels/attention/paged_attention": {
         "baseline": "baseline.py",
         "semantic_contracts": {
